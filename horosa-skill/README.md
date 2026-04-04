@@ -31,6 +31,43 @@ cd horosa-skill
 uv run horosa-skill serve --transport stdio
 ```
 
+## Recommended First Workflow
+
+If you want the least confusing path:
+
+```bash
+cd horosa-skill
+uv sync
+uv run horosa-skill install
+uv run horosa-skill doctor
+```
+
+Then ask the dispatcher to choose methods:
+
+```bash
+echo '{
+  "query":"请综合奇门、六壬和星盘做当前状态分析",
+  "birth":{"date":"1990-01-01","time":"12:00","zone":"8","lat":"31n14","lon":"121e28"},
+  "save_result": true
+}' | uv run horosa-skill ask --stdin
+```
+
+Then inspect the exact run:
+
+```bash
+uv run horosa-skill memory show <run_id>
+```
+
+If your AI produced a final narrative answer after calling tools, attach it back:
+
+```bash
+echo '{
+  "run_id":"<run_id>",
+  "ai_answer":"先稳后升，宜先整理资源再扩张。",
+  "ai_answer_structured":{"trend":"up_later"}
+}' | uv run horosa-skill memory answer --stdin
+```
+
 ## CLI Examples
 
 List tools:
@@ -94,6 +131,23 @@ Query local memory:
 
 ```bash
 uv run horosa-skill memory query --tool chart --limit 5
+```
+
+Show one exact run:
+
+```bash
+uv run horosa-skill memory show <run_id>
+```
+
+Attach the AI's final answer to an existing run:
+
+```bash
+echo '{
+  "run_id":"<run_id>",
+  "user_question":"我接下来事业走势如何？",
+  "ai_answer":"先稳后升，宜先整理资源再扩张。",
+  "ai_answer_structured":{"trend":"up_later"}
+}' | uv run horosa-skill memory answer --stdin
 ```
 
 ## AI Client Setup

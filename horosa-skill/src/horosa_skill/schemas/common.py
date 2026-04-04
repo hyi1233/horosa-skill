@@ -40,8 +40,8 @@ class DispatchEnvelope(BaseModel):
     selected_tools: list[str] = Field(default_factory=list)
     normalized_inputs: dict[str, dict[str, Any]] = Field(default_factory=dict)
     results: dict[str, ToolEnvelope] = Field(default_factory=dict)
+    result_export_contracts: dict[str, dict[str, Any]] = Field(default_factory=dict)
     summary: list[str] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)
     memory_ref: MemoryRef | None = None
     error: ErrorInfo | None = None
-

@@ -2,8 +2,8 @@
 
 <div align="center">
   <h1>Horosa Skill</h1>
-  <p><strong>面向星阙 / Horosa 的本地优先 AI Skill 分发层。</strong></p>
-  <p>让 Claude、Codex、Open WebUI、OpenClaw 这类 AI 可以通过 MCP 直接调用星阙的结构化玄学算法、完整 AI 导出协议与离线 runtime。</p>
+  <p><strong>面向星阙 / Horosa 的离线优先 AI 基础设施层。</strong></p>
+  <p>让 Claude、Codex、Open WebUI、OpenClaw 这类 AI 在本机直接调用真正的星阙算法、完整 AI 导出协议和离线 runtime，并把每次结果写成可检索的结构化记忆。</p>
 
   <p>
     <a href="https://github.com/Horace-Maxwell/horosa-skill">
@@ -21,79 +21,63 @@
     <img src="https://img.shields.io/github/stars/Horace-Maxwell/horosa-skill?style=for-the-badge" alt="GitHub stars" />
     <img src="https://img.shields.io/github/v/release/Horace-Maxwell/horosa-skill?display_name=tag&style=for-the-badge" alt="Release" />
     <img src="https://img.shields.io/badge/platform-macOS%20%7C%20Windows-0f766e?style=for-the-badge" alt="Platforms" />
-    <img src="https://img.shields.io/badge/runtime-本地优先-111827?style=for-the-badge" alt="Local first runtime" />
+    <img src="https://img.shields.io/badge/runtime-离线优先-111827?style=for-the-badge" alt="Offline first runtime" />
     <img src="https://img.shields.io/badge/MCP-ready-111827?style=for-the-badge" alt="MCP ready" />
-    <img src="https://img.shields.io/badge/python-3.12%2B-111827?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.12+" />
+    <img src="https://img.shields.io/badge/structured-JSON%20artifacts-111827?style=for-the-badge" alt="Structured JSON artifacts" />
   </p>
 </div>
 
 ![Horosa Skill hero](./docs/media/hero-banner.svg)
 
-## 这个仓库是什么
+## 这个仓库到底是干什么的
 
-Horosa Skill 的目标，是把星阙里最强的 AI 导出能力和本地算法能力，整理成现代 AI 能直接调用的接口层。
+星阙本身已经有很强的玄学算法、本地运行链路和 AI 导出能力。Horosa Skill 做的事情，是把这些能力整理成现代 AI 真正能稳定调用的交付层。
 
-- 把完整的星阙 AI 导出文本解析成稳定 JSON
-- 通过 MCP 和 JSON-first CLI 暴露结构化工具
-- 把结果写入本地 SQLite 和 JSON artifact
-- 从同一个本地项目文件夹打包离线 runtime
-- 保持 GitHub 仓库整洁，同时保证你本地文件夹自包含
+它解决的是这几个问题：
 
-如果目标是“别人装一次后，AI 就能在本机直接调用真正的星阙算法，而且不再依赖外部服务”，这个仓库就是围绕这个目标设计的。
+- runtime 怎么离线安装
+- AI 怎么通过 MCP 或 CLI 调真实算法
+- 输出怎么从自由文本变成稳定 JSON
+- 本地结果怎么落库、复查、再检索
+- GitHub 仓库怎么保持轻量，同时又不牺牲完整离线分发
 
-## 哪些东西放在哪里
+如果你的目标是“别人 clone 仓库后，装一次，就能让 AI 在自己机器上直接调用真正的星阙方法”，这个仓库就是为这个目标做的。
 
-这个项目刻意把两个概念分开：
+## 当前已经能直接调用的方法
 
-| 区域 | 作用 |
+### 已上线的直接工具层
+
+| 领域 | 当前可直接调用的方法 |
 | --- | --- |
-| GitHub 仓库 | 公开代码、文档、CLI、MCP 接口、示例配置、发布脚本 |
-| 本地项目文件夹 | 上述全部内容，以及离线打包所需的大体积 runtime 源文件 |
+| 导出与调度 | `export_registry`、`export_parse`、`horosa_dispatch` |
+| 核心星盘 | `chart`、`chart13`、`hellen_chart`、`guolao_chart`、`india_chart`、`relative`、`germany` |
+| 推运方法 | `solarreturn`、`lunarreturn`、`solararc`、`givenyear`、`profection`、`pd`、`pdchart`、`zr`、`firdaria`、`decennials` |
+| 中文术数 | `ziwei_birth`、`ziwei_rules`、`bazi_birth`、`bazi_direct`、`liureng_gods`、`liureng_runyear`、`qimen`、`taiyi`、`jinkou`、`tongshefa`、`sanshiunited`、`suzhan`、`sixyao`、`jieqi_year`、`nongli_time`、`gua_desc`、`gua_meiyi` |
+| 其他模块 | `otherbu` |
 
-核心规则是：
+### 已建模的 AI 导出协议面
 
-- 运行和打包所需的 runtime 输入可以放在这个本地文件夹里
-- 这些大文件不一定需要提交进 GitHub 历史
-- 但打包脚本必须只依赖这个文件夹本身，不能再去旁边别的目录找东西
+Horosa Skill 不只是能跑工具，还已经把星阙 AI 导出协议整理成机器可读表面，覆盖：
 
-这也是 `vendor/runtime-source/` 存在的原因。
+- `astrochart`、`indiachart`、`astrochart_like`、`relative`
+- `primarydirect`、`primarydirchart`、`zodialrelease`、`firdaria`、`profection`、`solararc`、`solarreturn`、`lunarreturn`、`givenyear`、`decennials`
+- `bazi`、`ziwei`、`suzhan`、`sixyao`、`tongshefa`、`liureng`、`jinkou`、`qimen`、`sanshiunited`、`taiyi`
+- `guolao`、`germany`、`jieqi`、`jieqi_meta`、`jieqi_chunfen`、`jieqi_xiazhi`、`jieqi_qiufen`、`jieqi_dongzhi`
+- `otherbu`、`generic`
 
-## Runtime 到底怎么放
+### 明确不纳入本次发布
 
-这个项目里，runtime 只有三种正确位置：
+- `fengshui`
 
-| 场景 | runtime 放在哪里 | 要不要提交进 GitHub 仓库历史 |
-| --- | --- | --- |
-| 普通用户从 GitHub 安装 | macOS 放 `~/.horosa/runtime/current`，Windows 放 `%LOCALAPPDATA%/Horosa/runtime/current` | 不需要 |
-| 维护者本地准备 release | 当前项目文件夹里的 `vendor/runtime-source/` | 默认不需要 |
-| 面向最终用户公开分发 | GitHub Releases 的 runtime 压缩包和 release manifest | 需要，但作为 Release 资产，不是普通 Git 提交 |
+## 这个仓库真正强的地方
 
-实际含义就是：
-
-- 普通用户 clone 仓库后，应该运行 `horosa-skill install`，从 GitHub Releases 下载对应平台 runtime
-- 维护者为了打包方便，可以把大体积 runtime 输入留在本地 `vendor/runtime-source/`
-- 仓库本身必须保持轻量，不能把完整离线 runtime 长期塞进正常 Git 历史
-
-如果某个文件只是“打 runtime 包时要用”，那它应该待在本地 `vendor/runtime-source/` 或最终 Release 资产里，而不是默认进 GitHub 仓库提交。
-
-## 为什么要做这个仓库
-
-- 星阙现有的 AI 导出能力很强，但原始文本对 tool-calling 模型还不够友好。
-- 普通用户不应该为了离线运行 Horosa，就必须拿到你的整个私有开发目录。
-- 一个真正面向 AI 的公开仓库，必须有稳定的 schema、安装路径、runtime 方案和接入说明。
-
-Horosa Skill 就是这层交付层。
-
-## 核心能力
-
-| 模块 | 作用 |
+| 能力 | 意义 |
 | --- | --- |
-| 导出协议 | 把星阙 AI 导出规则公开成机器可读 schema |
-| 导出解析 | 把星阙 AI 导出文本转成结构化 JSON |
-| 工具层 | 提供 `horosa_dispatch` 和原子玄学工具 |
-| AI 接入 | 支持 Claude、Codex、Open WebUI、OpenClaw 等 MCP 客户端 |
-| 本地存储 | 结果进入 SQLite，并同步输出 JSON artifact |
-| 离线打包 | 从本地 vendored runtime sources 直接打包 runtime payload |
+| 真离线 runtime | 安装后可以在本机直接跑算法、星历、导出协议，不依赖外部服务 |
+| 稳定结构化返回 | 每个工具统一返回 `ok`、`tool`、`version`、`input_normalized`、`data`、`summary`、`warnings`、`memory_ref`、`error` |
+| 导出协议固化 | 支持的方法会自动带 `export_snapshot` 和 `export_format`，方便 AI 稳定消费 |
+| 本地记忆可检索 | 结果进入 SQLite 和 JSON artifact，可复查、可复用、可检索 |
+| 轻仓库 + 重 Release | GitHub 仓库保持干净，完整 runtime 通过 Releases 分发 |
 
 ## 快速开始
 
@@ -118,41 +102,56 @@ cd horosa-skill
 uv run horosa-skill serve --transport stdio
 ```
 
-## 安装方式
+## 最不容易混淆的用法
 
-如果你已经有 runtime archive：
+如果你只是第一次上手，直接记这 4 条就够了：
 
-```bash
-cd horosa-skill
-uv run horosa-skill install --archive /path/to/runtime-payload.tar.gz
-uv run horosa-skill doctor
-```
-
-如果 runtime 通过 GitHub Releases 分发：
+1. 安装并检查 runtime
 
 ```bash
 cd horosa-skill
+uv sync
 uv run horosa-skill install
 uv run horosa-skill doctor
 ```
 
-## AI 客户端接入
+2. 让 AI 自己选工具
 
-- [Claude Desktop 配置](./horosa-skill/examples/clients/claude_desktop_config.json)
-- [Codex 配置](./horosa-skill/examples/clients/codex-config.toml)
-- [Open WebUI 接入说明](./horosa-skill/examples/clients/openwebui-streamable-http.md)
-- [OpenClaw 接入说明](./horosa-skill/examples/clients/openclaw-mcp.md)
+```bash
+echo '{
+  "query":"请综合奇门、六壬和星盘分析当前状态",
+  "birth":{"date":"1990-01-01","time":"12:00","zone":"8","lat":"31n14","lon":"121e28"},
+  "save_result": true
+}' | uv run horosa-skill ask --stdin
+```
 
-## CLI 示例
+3. 精确查看某一条记录
 
-导出完整星阙 AI export registry：
+```bash
+uv run horosa-skill memory show <run_id>
+```
+
+4. 把 AI 最终回答回写到那条记录
+
+```bash
+echo '{
+  "run_id":"<run_id>",
+  "user_question":"我接下来事业走势如何？",
+  "ai_answer":"先稳后升，宜先整理资源再扩张。",
+  "ai_answer_structured":{"trend":"up_later"}
+}' | uv run horosa-skill memory answer --stdin
+```
+
+## 典型调用示例
+
+输出完整星阙 AI export registry：
 
 ```bash
 cd horosa-skill
 uv run horosa-skill export registry
 ```
 
-把星阙 AI 导出文本解析成结构化 JSON：
+把星阙 AI 导出文本转为结构化 JSON：
 
 ```bash
 cd horosa-skill
@@ -162,62 +161,55 @@ echo '{
 }' | uv run horosa-skill export parse --stdin
 ```
 
-直接运行原子工具：
+直接跑一个工具：
 
 ```bash
 echo '{"date":"1990-01-01","time":"12:00","zone":"8","lat":"31n14","lon":"121e28"}' \
   | uv run horosa-skill tool run chart --stdin
 ```
 
+直接跑一个 Phase 2 本地方法：
+
+```bash
+echo '{"taiyin":"巽","taiyang":"坤","shaoyang":"震","shaoyin":"震"}' \
+  | uv run horosa-skill tool run tongshefa --stdin
+```
+
 运行总调度器：
 
 ```bash
 echo '{
-  "query":"请做本命盘分析并给出主运势方向",
+  "query":"请综合奇门、六壬和星盘做当前状态分析",
   "birth":{"date":"1990-01-01","time":"12:00","zone":"8","lat":"31n14","lon":"121e28"},
   "save_result": true
 }' | uv run horosa-skill dispatch --stdin
 ```
 
-## 仓库结构
+## AI 客户端接入
 
-| 路径 | 作用 |
-| --- | --- |
-| [`horosa-skill/`](./horosa-skill) | Python 包、CLI、MCP server、测试、示例配置、发布脚本 |
-| [`docs/`](./docs) | runtime 规范、发布说明、维护文档 |
-| [`vendor/`](./vendor) | 本地离线打包所需的 runtime source 区域 |
+- [Claude Desktop 配置](./horosa-skill/examples/clients/claude_desktop_config.json)
+- [Codex 配置](./horosa-skill/examples/clients/codex-config.toml)
+- [Open WebUI 接入说明](./horosa-skill/examples/clients/openwebui-streamable-http.md)
+- [OpenClaw 接入说明](./horosa-skill/examples/clients/openclaw-mcp.md)
 
-维护者视角可看 [Repo Layout](./docs/REPO_LAYOUT.md)。
+## Runtime 放置模型
 
-## 离线 Runtime 策略
+这个项目故意把三层分开：
 
-这个仓库采用双层模型：
+| 层 | 放在哪里 | 为什么 |
+| --- | --- | --- |
+| 公共仓库层 | GitHub 仓库 | 代码、文档、CLI、MCP、示例、发布脚本 |
+| 维护者打包输入层 | 本地 `vendor/runtime-source/` | 打 runtime 包时需要的大体积源 |
+| 最终用户运行层 | macOS 在 `~/.horosa/runtime/current`，Windows 在 `%LOCALAPPDATA%/Horosa/runtime/current` | 安装后真正执行算法的离线 runtime |
 
-- GitHub 仓库保持轻量、清晰、可审查
-- 完整离线 runtime 从本地文件夹内的 runtime sources 构建出来
-
-本地 runtime 输入通常包括：
-
-- Horosa 的 Python 算法层
-- flatlib 和 Swiss Ephemeris 数据
-- 星阙导出相关前端资产
-- 内嵌 macOS Python runtime
-- 内嵌 macOS Java runtime
-- `astrostudyboot.jar`
-
-详细说明见：
-
-- [Offline Runtime Releases](./docs/OFFLINE_RUNTIME_RELEASES.md)
-- [Runtime Manifest Spec](./docs/RUNTIME_MANIFEST_SPEC.md)
-- [Algorithm Coverage](./docs/ALGORITHM_COVERAGE.md)
-- [Vendored Runtime Sources](./vendor/README.md)
+这样做的目的，就是让仓库看起来专业、轻量、可审查，同时又不牺牲离线打包能力。
 
 ## 本地存储模型
 
-结构化结果默认存储在本地：
+结构化结果默认落在本地：
 
-- macOS / Linux: `~/.horosa-skill/`
-- Windows: `%APPDATA%/HorosaSkill/`
+- macOS / Linux：`~/.horosa-skill/`
+- Windows：`%APPDATA%/HorosaSkill/`
 
 每次运行会写入：
 
@@ -225,40 +217,53 @@ echo '{
 - tool call 记录
 - entity 索引
 - `runs/<YYYY>/<MM>/<DD>/` 下的 JSON artifact
+- 一份 `run manifest`，方便按一次完整调用来查看和管理
+
+每条记录现在默认同时保存：
+
+- 原始 query / user question
+- 每个 tool 的结构化结果
+- 最终 AI answer
+- 可选的 `ai_answer_structured`
+
+如果你的 AI 先调工具、再自己生成最终回答，推荐流程是：
+
+1. 先调用 `ask` 或 `tool run`
+2. 记下返回里的 `memory_ref.run_id`
+3. 用 `memory answer` 把 AI 最终回答写回去
+4. 用 `memory show <run_id>` 查看完整记录
+
+## 仓库结构
+
+| 路径 | 作用 |
+| --- | --- |
+| [`horosa-skill/`](./horosa-skill) | Python 包、CLI、MCP server、测试、示例配置、发布脚本 |
+| [`docs/`](./docs) | runtime 规范、覆盖矩阵、发布说明、维护文档 |
+| [`vendor/`](./vendor) | 本地离线打包所需的 runtime source 区域 |
+
+建议顺手看的文档：
+
+- [Repo Layout](./docs/REPO_LAYOUT.md)
+- [Offline Runtime Releases](./docs/OFFLINE_RUNTIME_RELEASES.md)
+- [Runtime Manifest Spec](./docs/RUNTIME_MANIFEST_SPEC.md)
+- [Algorithm Coverage](./docs/ALGORITHM_COVERAGE.md)
+- [Vendored Runtime Sources](./vendor/README.md)
 
 ## 当前状态
 
 已经完成：
 
-- 结构化 export registry
-- 结构化 export parser
-- CLI 和 MCP 接口
-- 本地 memory store
-- runtime install、doctor、stop 命令
-- runtime 启停管理
-- release manifest 驱动的安装入口
-- macOS 与 Windows runtime release 包
-- `qimen`、`taiyi`、`jinkou` 的 headless JS runtime
-- runtime archive 校验脚本
-
-明确不纳入本次发布：
-
-- `fengshui`
-
-## 设计参考
-
-这个仓库的方向，参考了高完成度开源项目的呈现方式，也参考了你自己 `portpilot` 那种产品型仓库结构：
-
-- [supabase/supabase](https://github.com/supabase/supabase)
-- [shadcn-ui/ui](https://github.com/shadcn-ui/ui)
-- [n8n-io/n8n](https://github.com/n8n-io/n8n)
-- [open-webui/open-webui](https://github.com/open-webui/open-webui)
-- 你自己的 `portpilot` 仓库在 hero、双语 README、产品化 framing 上的做法
+- 离线 runtime install、doctor、serve、stop
+- macOS 和 Windows runtime release 资产
+- 本地 MCP 和 JSON-first CLI
+- 完整 export registry 与 export parser
+- SQLite + JSON artifact 记忆层
+- 支持方法的固定 export contract
+- `qimen`、`taiyi`、`jinkou`、`tongshefa` 的本地 headless engine
+- `sanshiunited` 的本地聚合层
+- `hellen_chart`、`guolao_chart`、`germany`、`firdaria`、`decennials`、`suzhan`、`sixyao`、`otherbu`
+- 面向调用、输出、存储、检索的全量自检
 
 ## Contributing
 
 见 [CONTRIBUTING.md](./CONTRIBUTING.md)。
-
-## Security
-
-见 [SECURITY.md](./SECURITY.md)。

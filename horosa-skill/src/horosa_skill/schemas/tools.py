@@ -217,6 +217,63 @@ class SanShiUnitedInput(FlexibleModel):
     liureng_isDiurnal: bool | None = None
 
 
+class SuZhanInput(BirthInput):
+    szchart: int | None = 0
+    szshape: int | None = 0
+    houseStartMode: int | None = 1
+    doubingSu28: bool | None = True
+
+
+class GermanyInput(BirthInput):
+    predictive: bool | None = False
+
+
+class OtherBuInput(BirthInput):
+    tradition: bool | None = False
+    sign: str | None = "Aries"
+    house: int | None = 0
+    planet: str | None = "Sun"
+    question: str | None = None
+
+
+class SixYaoLineInput(FlexibleModel):
+    value: int | bool
+    change: bool | None = False
+    god: str | None = None
+    name: str | None = None
+
+
+class SixYaoInput(FlexibleModel):
+    date: str
+    time: str
+    zone: str
+    lat: str
+    lon: str
+    gpsLat: float | None = None
+    gpsLon: float | None = None
+    ad: int | None = 1
+    question: str | None = None
+    gua_code: str | None = None
+    changed_code: str | None = None
+    lines: list[SixYaoLineInput] = Field(default_factory=list)
+
+
+class FirdariaInput(BirthInput):
+    predictive: bool | None = True
+
+
+class DecennialsInput(BirthInput):
+    predictive: bool | None = True
+    startMode: str | None = "sect_light"
+    orderType: str | None = "zodiacal"
+    dayMethod: str | None = "valens"
+    calendarType: str | None = "calendar_360"
+    aiMode: str | None = "l1_all"
+    aiL1Idx: int | None = 0
+    aiL2Idx: int | None = 0
+    aiL3Idx: int | None = 0
+
+
 class DispatchSubjectInput(FlexibleModel):
     name: str | None = None
     birth: BirthInput | ZiWeiBirthInput | BaZiBirthInput | LiuRengGodsInput | NongliTimeInput | None = None
@@ -245,3 +302,11 @@ class ExportParseInput(FlexibleModel):
     selected_sections: list[str] | None = None
     planet_info: PlanetInfoSettingInput | None = None
     astro_meaning: AstroMeaningSettingInput | None = None
+
+
+class MemoryAnswerInput(FlexibleModel):
+    run_id: str
+    user_question: str | None = None
+    ai_answer: str
+    ai_answer_structured: dict[str, Any] | list[Any] | None = None
+    answer_meta: dict[str, Any] = Field(default_factory=dict)

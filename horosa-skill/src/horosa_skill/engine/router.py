@@ -34,6 +34,10 @@ def select_tools(request: DispatchInput) -> list[str]:
         add("taiyi")
     if _contains_any(text, ["金口诀", "jinkou"]):
         add("jinkou")
+    if _contains_any(text, ["宿占", "宿盘", "suzhan"]):
+        add("suzhan")
+    if _contains_any(text, ["六爻", "易卦", "sixyao", "guazhan", "liuyao"]):
+        add("sixyao")
     if _contains_any(text, ["统摄法", "tongshefa"]):
         add("tongshefa")
     if _contains_any(text, ["三式合一", "sanshi", "sanshiunited"]):
@@ -55,6 +59,10 @@ def select_tools(request: DispatchInput) -> list[str]:
         add("lunarreturn")
     if _contains_any(text, ["solar arc", "solararc", "太阳弧"]):
         add("solararc")
+    if _contains_any(text, ["法达", "firdaria"]):
+        add("firdaria")
+    if _contains_any(text, ["十年大运", "decennials", "decennial"]):
+        add("decennials")
     if _contains_any(text, ["primary direction", "pdchart", "pd ", "本初方向", "主限"]):
         if _contains_any(text, ["chart", "盘", "chart view"]):
             add("pdchart")
@@ -72,6 +80,10 @@ def select_tools(request: DispatchInput) -> list[str]:
         add("guolao_chart")
     if _contains_any(text, ["希腊", "hellen", "hellenistic"]):
         add("hellen_chart")
+    if _contains_any(text, ["量化盘", "germany", "midpoint", "中点盘"]):
+        add("germany")
+    if _contains_any(text, ["西洋游戏", "dice", "占星骰子", "otherbu"]):
+        add("otherbu")
     if _contains_any(text, ["13宫", "chart13"]):
         add("chart13")
 

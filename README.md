@@ -2,8 +2,8 @@
 
 <div align="center">
   <h1>Horosa Skill</h1>
-  <p><strong>The local-first AI skill layer for Xingque / Horosa.</strong></p>
-  <p>Run structured metaphysical calculations, parse the full Xingque AI export format, and expose offline tools to Claude, Codex, Open WebUI, or OpenClaw through MCP.</p>
+  <p><strong>Offline-first AI infrastructure for Xingque / Horosa.</strong></p>
+  <p>Install once, run real Xingque methods locally, expose them to Claude, Codex, Open WebUI, or OpenClaw through MCP, and persist every result as structured memory.</p>
 
   <p>
     <a href="https://github.com/Horace-Maxwell/horosa-skill">
@@ -21,79 +21,63 @@
     <img src="https://img.shields.io/github/stars/Horace-Maxwell/horosa-skill?style=for-the-badge" alt="GitHub stars" />
     <img src="https://img.shields.io/github/v/release/Horace-Maxwell/horosa-skill?display_name=tag&style=for-the-badge" alt="Release" />
     <img src="https://img.shields.io/badge/platform-macOS%20%7C%20Windows-0f766e?style=for-the-badge" alt="Platforms" />
-    <img src="https://img.shields.io/badge/runtime-local%20first-111827?style=for-the-badge" alt="Local first runtime" />
+    <img src="https://img.shields.io/badge/runtime-offline%20first-111827?style=for-the-badge" alt="Offline first runtime" />
     <img src="https://img.shields.io/badge/MCP-ready-111827?style=for-the-badge" alt="MCP ready" />
-    <img src="https://img.shields.io/badge/python-3.12%2B-111827?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.12+" />
+    <img src="https://img.shields.io/badge/structured-JSON%20artifacts-111827?style=for-the-badge" alt="Structured JSON artifacts" />
   </p>
 </div>
 
 ![Horosa Skill hero](./docs/media/hero-banner.svg)
 
-## What Horosa Skill Is
-
-Horosa Skill turns Xingque's richest export surface and offline calculation stack into something modern AI tools can actually call.
-
-- Parse the full Xingque AI export format into stable JSON
-- Expose structured tools through MCP and a JSON-first CLI
-- Persist results to local SQLite and JSON artifacts
-- Package offline runtime assets from one local project folder
-- Keep the public GitHub repo clean without losing local self-containment
-
-If the goal is "install once, let any serious AI call real Xingque methods locally, and do not depend on an external service," this repo is built for that.
-
-## What Lives Where
-
-This project intentionally separates two concerns:
-
-| Area | Purpose |
-| --- | --- |
-| GitHub repository | Public code, docs, CLI, MCP surface, examples, and release scripts |
-| Local project folder | Everything above, plus any large runtime sources needed for offline packaging |
-
-The important rule is:
-
-- required runtime inputs can live inside this local folder
-- they do not need to be committed to GitHub history
-- packaging scripts must be able to build from this folder alone, without hunting through sibling directories
-
-That is why `vendor/runtime-source/` exists locally and is ignored by git.
-
-## Runtime Handling Rules
-
-There are only three correct runtime locations in this project:
-
-| Scenario | Where runtime lives | Should it be committed to GitHub? |
-| --- | --- | --- |
-| Normal user installs from GitHub | `~/.horosa/runtime/current` on macOS or `%LOCALAPPDATA%/Horosa/runtime/current` on Windows | No |
-| Maintainer prepares a release locally | `vendor/runtime-source/` inside this local project folder | No, not by default |
-| Public distribution to end users | GitHub Releases runtime archives plus release manifest | Yes, as release assets, not as repo history |
-
-What this means in practice:
-
-- end users who clone the repo should run `horosa-skill install` and download a platform runtime from GitHub Releases
-- maintainers may keep large packaging inputs under `vendor/runtime-source/` locally so release builds do not depend on sibling folders
-- the repository itself should stay lightweight and should not carry full offline runtimes in normal Git history
-
-If a file is only needed to build the runtime archive, it belongs either in the local `vendor/runtime-source/` area or in a published Release asset, not in regular repository commits.
-
 ## Why This Repo Exists
 
-- Xingque already has a very rich AI export surface, but raw text is not enough for tool-calling models.
-- Most users should not need your private dev tree just to run Horosa offline.
-- A serious AI-facing repository needs a stable schema, install path, runtime story, and client integration story.
+Xingque already has deep metaphysical logic, rich export content, and a serious local runtime story. What it did not have was a GitHub-first delivery layer that modern AI tools can call cleanly.
 
-Horosa Skill is the delivery layer for exactly that.
+Horosa Skill is that delivery layer:
 
-## Core Capabilities
+- offline runtime install from GitHub Releases
+- local MCP server plus JSON-first CLI
+- stable structured envelopes instead of loose text
+- machine-readable Xingque export protocol
+- local SQLite plus JSON artifact storage for retrieval and reuse
 
-| Area | What it does |
+If the goal is "clone the repo, install once, and let AI call real Horosa methods locally without a remote service," this repo is built for exactly that.
+
+## What Ships Today
+
+### Directly callable methods
+
+| Domain | Methods available now |
 | --- | --- |
-| Export protocol | Publishes the Xingque AI export registry as machine-readable schema |
-| Export parsing | Converts Xingque AI export text into structured JSON sections |
-| Tool surface | Exposes `horosa_dispatch` plus atomic tools for charting and metaphysical methods |
-| AI integration | Supports MCP-based clients such as Claude, Codex, Open WebUI, and OpenClaw |
-| Local storage | Stores runs in SQLite and writes JSON artifacts for later retrieval |
-| Offline packaging | Builds runtime payloads from local vendored sources inside this folder |
+| Export + orchestration | `export_registry`, `export_parse`, `horosa_dispatch` |
+| Core astrology | `chart`, `chart13`, `hellen_chart`, `guolao_chart`, `india_chart`, `relative`, `germany` |
+| Predictive astrology | `solarreturn`, `lunarreturn`, `solararc`, `givenyear`, `profection`, `pd`, `pdchart`, `zr`, `firdaria`, `decennials` |
+| Chinese metaphysics | `ziwei_birth`, `ziwei_rules`, `bazi_birth`, `bazi_direct`, `liureng_gods`, `liureng_runyear`, `qimen`, `taiyi`, `jinkou`, `tongshefa`, `sanshiunited`, `suzhan`, `sixyao`, `jieqi_year`, `nongli_time`, `gua_desc`, `gua_meiyi` |
+| Other occult modules | `otherbu` |
+
+### Export protocol domains already modeled
+
+Horosa Skill does not only expose tools. It also models Xingque's AI export registry as a machine-readable protocol surface, including:
+
+- `astrochart`, `indiachart`, `astrochart_like`, `relative`
+- `primarydirect`, `primarydirchart`, `zodialrelease`, `firdaria`, `profection`, `solararc`, `solarreturn`, `lunarreturn`, `givenyear`, `decennials`
+- `bazi`, `ziwei`, `suzhan`, `sixyao`, `tongshefa`, `liureng`, `jinkou`, `qimen`, `sanshiunited`, `taiyi`
+- `guolao`, `germany`, `jieqi`, `jieqi_meta`, `jieqi_chunfen`, `jieqi_xiazhi`, `jieqi_qiufen`, `jieqi_dongzhi`
+- `otherbu`, `generic`
+
+### Explicit shipping exclusion
+
+- `fengshui`
+
+## What Makes This Repo Different
+
+| Capability | What it means |
+| --- | --- |
+| Real offline runtime | The calculation stack, ephemeris, export logic, and MCP surface can run locally after install |
+| Structured result contract | Every tool returns `ok`, `tool`, `version`, `input_normalized`, `data`, `summary`, `warnings`, `memory_ref`, `error` |
+| Export-aware outputs | Supported methods also attach `export_snapshot` and `export_format` so AI can consume the same semantic structure every time |
+| Retrieval-ready memory | Results land in SQLite and JSON artifacts for later search, replay, and chaining |
+| Release-based distribution | The repo stays lightweight while full runtimes ship through GitHub Releases |
 
 ## Quick Start
 
@@ -118,41 +102,56 @@ cd horosa-skill
 uv run horosa-skill serve --transport stdio
 ```
 
-## Install Flow
+## Least Confusing Workflow
 
-If you already have a runtime archive:
+If you only want the shortest path, use these 4 steps:
 
-```bash
-cd horosa-skill
-uv run horosa-skill install --archive /path/to/runtime-payload.tar.gz
-uv run horosa-skill doctor
-```
-
-If you publish runtime assets through GitHub Releases:
+1. Install and verify the offline runtime
 
 ```bash
 cd horosa-skill
+uv sync
 uv run horosa-skill install
 uv run horosa-skill doctor
 ```
 
-## AI Client Integrations
+2. Let the dispatcher choose methods for you
 
-- [Claude Desktop config](./horosa-skill/examples/clients/claude_desktop_config.json)
-- [Codex config](./horosa-skill/examples/clients/codex-config.toml)
-- [Open WebUI setup](./horosa-skill/examples/clients/openwebui-streamable-http.md)
-- [OpenClaw setup](./horosa-skill/examples/clients/openclaw-mcp.md)
+```bash
+echo '{
+  "query":"Please use qimen, liureng, and chart methods to analyze the current situation",
+  "birth":{"date":"1990-01-01","time":"12:00","zone":"8","lat":"31n14","lon":"121e28"},
+  "save_result": true
+}' | uv run horosa-skill ask --stdin
+```
 
-## CLI Examples
+3. Inspect one exact record
 
-Export the full Xingque AI export registry:
+```bash
+uv run horosa-skill memory show <run_id>
+```
+
+4. Write the AI's final answer back into that record
+
+```bash
+echo '{
+  "run_id":"<run_id>",
+  "user_question":"What does this mean for my career next?",
+  "ai_answer":"The pattern is cautious first, then gradually upward.",
+  "ai_answer_structured":{"trend":"up_later"}
+}' | uv run horosa-skill memory answer --stdin
+```
+
+## Example Flows
+
+Run the export registry:
 
 ```bash
 cd horosa-skill
 uv run horosa-skill export registry
 ```
 
-Parse Xingque AI export text into structured JSON:
+Parse Xingque export text into structured JSON:
 
 ```bash
 cd horosa-skill
@@ -162,55 +161,48 @@ echo '{
 }' | uv run horosa-skill export parse --stdin
 ```
 
-Run an atomic tool directly:
+Run a tool directly:
 
 ```bash
 echo '{"date":"1990-01-01","time":"12:00","zone":"8","lat":"31n14","lon":"121e28"}' \
   | uv run horosa-skill tool run chart --stdin
 ```
 
+Run a Phase 2 local method directly:
+
+```bash
+echo '{"taiyin":"巽","taiyang":"坤","shaoyang":"震","shaoyin":"震"}' \
+  | uv run horosa-skill tool run tongshefa --stdin
+```
+
 Run the dispatcher:
 
 ```bash
 echo '{
-  "query":"请做本命盘分析并给出主运势方向",
+  "query":"Please use qimen, liureng, and chart methods to analyze the current situation",
   "birth":{"date":"1990-01-01","time":"12:00","zone":"8","lat":"31n14","lon":"121e28"},
   "save_result": true
 }' | uv run horosa-skill dispatch --stdin
 ```
 
-## Repository Layout
+## AI Client Integrations
 
-| Path | Role |
-| --- | --- |
-| [`horosa-skill/`](./horosa-skill) | Python package, CLI, MCP server, tests, examples, and release scripts |
-| [`docs/`](./docs) | Runtime specs, release notes, and maintainership docs |
-| [`vendor/`](./vendor) | Local runtime source area for offline packaging |
+- [Claude Desktop config](./horosa-skill/examples/clients/claude_desktop_config.json)
+- [Codex config](./horosa-skill/examples/clients/codex-config.toml)
+- [Open WebUI setup](./horosa-skill/examples/clients/openwebui-streamable-http.md)
+- [OpenClaw setup](./horosa-skill/examples/clients/openclaw-mcp.md)
 
-See [Repo Layout](./docs/REPO_LAYOUT.md) for the maintainer view.
+## Runtime Model
 
-## Offline Runtime Strategy
+This project keeps three layers separate on purpose:
 
-This repo uses a two-layer model:
+| Layer | Lives where | Why |
+| --- | --- | --- |
+| Public repo | GitHub repository | code, docs, CLI, MCP surface, examples, release scripts |
+| Maintainer packaging input | local `vendor/runtime-source/` | large runtime sources needed to build release assets |
+| End-user runtime | `~/.horosa/runtime/current` on macOS or `%LOCALAPPDATA%/Horosa/runtime/current` on Windows | installed offline runtime used by real tool execution |
 
-- the public repository stays reviewable and uploadable
-- full offline runtime payloads are built from local runtime sources inside this folder
-
-Typical local runtime inputs can include:
-
-- Horosa Python calculation layer
-- flatlib and Swiss Ephemeris data
-- Xingque export-related frontend assets
-- embedded macOS Python runtime
-- embedded macOS Java runtime
-- bundled `astrostudyboot.jar`
-
-See:
-
-- [Offline Runtime Releases](./docs/OFFLINE_RUNTIME_RELEASES.md)
-- [Runtime Manifest Spec](./docs/RUNTIME_MANIFEST_SPEC.md)
-- [Algorithm Coverage](./docs/ALGORITHM_COVERAGE.md)
-- [Vendored Runtime Sources](./vendor/README.md)
+That separation keeps the repository reviewable without making runtime builds depend on random sibling directories.
 
 ## Local Storage Model
 
@@ -219,46 +211,59 @@ Structured results are stored locally by default:
 - macOS / Linux: `~/.horosa-skill/`
 - Windows: `%APPDATA%/HorosaSkill/`
 
-Each saved run can write:
+Each saved run can persist:
 
 - run metadata
 - tool call records
 - entity references
 - JSON artifacts under `runs/<YYYY>/<MM>/<DD>/`
+- one `run manifest` for easier per-run inspection and management
+
+Each record can now also keep:
+
+- the original query / user question
+- every tool result for that run
+- the AI's final answer
+- optional `ai_answer_structured` JSON
+
+Recommended pattern for external AI clients:
+
+1. call `ask` or `tool run`
+2. keep the returned `memory_ref.run_id`
+3. write the final AI answer with `memory answer`
+4. inspect the full record later with `memory show <run_id>`
+
+## Repository Layout
+
+| Path | Role |
+| --- | --- |
+| [`horosa-skill/`](./horosa-skill) | Python package, CLI, MCP server, tests, examples, and release scripts |
+| [`docs/`](./docs) | Runtime specs, coverage docs, release notes, and maintainership docs |
+| [`vendor/`](./vendor) | Local runtime source area for offline packaging |
+
+Useful docs:
+
+- [Repo Layout](./docs/REPO_LAYOUT.md)
+- [Offline Runtime Releases](./docs/OFFLINE_RUNTIME_RELEASES.md)
+- [Runtime Manifest Spec](./docs/RUNTIME_MANIFEST_SPEC.md)
+- [Algorithm Coverage](./docs/ALGORITHM_COVERAGE.md)
+- [Vendored Runtime Sources](./vendor/README.md)
 
 ## Current Status
 
 Implemented now:
 
-- structured export registry
-- structured export parser
-- CLI and MCP surfaces
-- local memory store
-- runtime install, doctor, and stop commands
-- runtime start or stop orchestration
-- release manifest driven install flow
-- production runtime archives for macOS and Windows
-- headless JS runtime for `qimen`, `taiyi`, and `jinkou`
-- runtime archive verification tooling
-
-Shipping exclusions:
-
-- `fengshui`
-
-## Design References
-
-This repo direction is informed by strong open-source product repositories and by your own product-style repo structure:
-
-- [supabase/supabase](https://github.com/supabase/supabase)
-- [shadcn-ui/ui](https://github.com/shadcn-ui/ui)
-- [n8n-io/n8n](https://github.com/n8n-io/n8n)
-- [open-webui/open-webui](https://github.com/open-webui/open-webui)
-- your `portpilot` repo pattern for hero layout, bilingual README flow, and product-first framing
+- offline runtime install, doctor, serve, and stop flow
+- macOS and Windows runtime release assets
+- local MCP plus JSON-first CLI
+- full export registry and export parser
+- structured storage with SQLite plus JSON artifacts
+- fixed export contracts across supported methods
+- headless local engines for `qimen`, `taiyi`, `jinkou`, and `tongshefa`
+- local aggregator support for `sanshiunited`
+- direct support for `hellen_chart`, `guolao_chart`, `germany`, `firdaria`, `decennials`, `suzhan`, `sixyao`, and `otherbu`
+- full self-check coverage for call, output, storage, and retrieval
 
 ## Contributing
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md).
-
-## Security
-
-See [SECURITY.md](./SECURITY.md).

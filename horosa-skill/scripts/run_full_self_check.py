@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import copy
 import json
 import tempfile
 from datetime import datetime
@@ -9,141 +10,60 @@ from zoneinfo import ZoneInfo
 
 from horosa_skill.config import Settings
 from horosa_skill.engine.registry import TOOL_DEFINITIONS
+from horosa_skill.exports.parser import parse_export_content
 from horosa_skill.runtime import HorosaRuntimeManager
 from horosa_skill.service import TOOL_EXPORT_TECHNIQUE_MAP, HorosaSkillService
+from horosa_skill.testing_payloads import build_sample_payloads
 
 
 def build_payloads() -> dict[str, dict]:
-    base_birth = {
-        "date": "2028/04/06",
-        "time": "09:33:00",
-        "zone": "+00:00",
-        "lat": "41n26",
-        "lon": "174w30",
-        "gpsLat": -41.433333,
-        "gpsLon": 174.5,
-        "hsys": 1,
-        "tradition": False,
-        "predictive": True,
-        "zodiacal": 0,
-        "simpleAsp": False,
-        "strongRecption": False,
-        "virtualPointReceiveAsp": True,
-        "southchart": False,
-        "ad": 1,
-        "name": "Horosa Smoke",
-        "pos": "Wellington",
-    }
-    east_birth = {
-        "date": "2028-04-06",
-        "time": "09:33:00",
-        "zone": "+08:00",
-        "lat": "31n13",
-        "lon": "121e28",
-        "gpsLat": 31.2167,
-        "gpsLon": 121.4667,
-        "ad": 1,
-    }
+    return build_sample_payloads()
+
+
+def _contract_is_complete(tool_name: str, result: dict) -> bool:
+    if tool_name not in TOOL_EXPORT_TECHNIQUE_MAP:
+        return True
+    return (
+        result["has_export_snapshot"]
+        and result["has_export_format"]
+        and result["format_source"] == "snapshot_parser"
+        and result["export_sections_count"] > 0
+        and result["selected_sections_count"] > 0
+        and result["technique_key"] == TOOL_EXPORT_TECHNIQUE_MAP[tool_name]
+        and not result["reparsed_missing_selected_sections"]
+        and not result["reparsed_unknown_detected_sections"]
+    )
+
+
+def _build_contract_summary(tool_name: str, payload: dict) -> dict:
+    data = payload.get("data") if isinstance(payload, dict) else {}
+    export_snapshot = data.get("export_snapshot") if isinstance(data, dict) else {}
+    export_format = data.get("export_format") if isinstance(data, dict) else {}
+    reparsed_missing: list[str] = []
+    reparsed_unknown: list[str] = []
+    technique = TOOL_EXPORT_TECHNIQUE_MAP.get(tool_name)
+    if technique and isinstance(export_snapshot, dict) and isinstance(export_snapshot.get("export_text"), str):
+        reparsed = parse_export_content(technique=technique, content=export_snapshot["export_text"])
+        reparsed_missing = list(reparsed.get("missing_selected_sections", []) or [])
+        reparsed_unknown = list(reparsed.get("unknown_detected_sections", []) or [])
     return {
-        "export_registry": {"technique": "qimen"},
-        "export_parse": {
-            "technique": "qimen",
-            "content": (
-                "[起盘信息]\n日期：2028-04-06 09:33:00\n\n"
-                "[八宫]\n坎一宫：值符=天蓬；值使=休门\n\n"
-                "[演卦]\n值符值使演卦：天泽履之乾为天\n"
-            ),
-            "selected_sections": ["起盘信息", "八宫详解", "奇门演卦"],
-        },
-        "qimen": dict(east_birth),
-        "taiyi": dict(east_birth),
-        "jinkou": {**east_birth, "diFen": "酉", "guirengType": 0},
-        "tongshefa": {"taiyin": "巽", "taiyang": "坤", "shaoyang": "震", "shaoyin": "震"},
-        "sanshiunited": dict(east_birth),
-        "chart": dict(base_birth),
-        "chart13": {**base_birth, "predictive": 0},
-        "hellen_chart": {**base_birth, "predictive": 0},
-        "guolao_chart": {
-            "date": "2028/04/06",
-            "time": "09:33:00",
-            "zone": "+08:00",
-            "lat": "31n13",
-            "lon": "121e28",
-            "gpsLat": 31.2167,
-            "gpsLon": 121.4667,
-            "hsys": 0,
-            "tradition": True,
-            "zodiacal": 0,
-            "doubingSu28": True,
-            "predictive": False,
-            "ad": 1,
-        },
-        "solarreturn": {**base_birth, "datetime": "2031-04-06 09:33:00", "dirZone": "+08:00", "dirLat": "31n13", "dirLon": "121e28"},
-        "lunarreturn": {**base_birth, "datetime": "2031-04-06 09:33:00", "dirZone": "+08:00", "dirLat": "31n13", "dirLon": "121e28"},
-        "solararc": {**base_birth, "datetime": "2031-04-06 09:33:00", "dirZone": "+00:00"},
-        "givenyear": {**base_birth, "datetime": "2031-04-06 09:33:00", "dirZone": "+08:00", "dirLat": "31n13", "dirLon": "121e28"},
-        "profection": {**base_birth, "datetime": "2031-04-06 09:33:00", "dirZone": "+00:00"},
-        "pd": {**base_birth, "pdtype": 0, "pdMethod": "astroapp_alchabitius", "pdTimeKey": "Ptolemy", "pdaspects": [0, 60, 90, 120, 180]},
-        "pdchart": {**base_birth, "pdtype": 0, "pdMethod": "astroapp_alchabitius", "pdTimeKey": "Ptolemy", "showPdBounds": 1, "datetime": "2031-04-06 09:33:00", "dirZone": "+00:00"},
-        "zr": dict(base_birth),
-        "relative": {
-            "inner": {**base_birth, "name": "甲"},
-            "outer": {**base_birth, "date": "1992/03/02", "time": "08:18:00", "name": "乙"},
-            "hsys": 0,
-            "zodiacal": 0,
-            "relative": 0,
-        },
-        "india_chart": {**base_birth, "zodiacal": 1, "predictive": 1, "pdtype": 0, "pdMethod": "astroapp_alchabitius", "pdTimeKey": "Ptolemy", "pdaspects": [0, 60, 90, 120, 180]},
-        "ziwei_birth": {**east_birth, "gender": True, "timeAlg": 0},
-        "ziwei_rules": {},
-        "bazi_birth": dict(east_birth),
-        "bazi_direct": {**east_birth, "gender": True, "timeAlg": 0, "after23NewDay": 0, "adjustJieqi": False, "byLon": False, "phaseType": 0},
-        "liureng_gods": {**east_birth, "after23NewDay": False},
-        "liureng_runyear": {
-            **east_birth,
-            "date": "2020-04-06",
-            "gender": True,
-            "guaDate": "2028-04-06",
-            "guaTime": "09:33:00",
-            "guaZone": "+08:00",
-            "guaLat": "31n13",
-            "guaLon": "121e28",
-            "guaAd": 1,
-            "guaAfter23NewDay": False,
-        },
-        "jieqi_year": {
-            "year": 2028,
-            "zone": "+08:00",
-            "lat": "31n13",
-            "lon": "121e28",
-            "gpsLat": 31.2167,
-            "gpsLon": 121.4667,
-            "hsys": 1,
-            "zodiacal": 0,
-            "doubingSu28": False,
-            "jieqis": ["春分", "夏至", "秋分", "冬至"],
-            "ad": 1,
-        },
-        "nongli_time": {
-            "date": "2028-04-06",
-            "time": "09:33:00",
-            "zone": "+08:00",
-            "lat": "31n13",
-            "lon": "121e28",
-            "gpsLat": 31.2167,
-            "gpsLon": 121.4667,
-            "gender": True,
-            "after23NewDay": 0,
-            "timeAlg": 0,
-            "ad": 1,
-        },
-        "gua_desc": {"name": ["111111", "000000", "101010"]},
-        "gua_meiyi": {"name": ["111", "000"]},
+        "tool": tool_name,
+        "ok": payload.get("ok") is True if isinstance(payload, dict) else False,
+        "has_export_snapshot": isinstance(export_snapshot, dict),
+        "has_export_format": isinstance(export_format, dict),
+        "format_source": export_snapshot.get("format_source") if isinstance(export_snapshot, dict) else None,
+        "export_sections_count": len(export_format.get("sections", [])) if isinstance(export_format, dict) else 0,
+        "selected_sections_count": len(export_format.get("selected_sections", [])) if isinstance(export_format, dict) else 0,
+        "technique_key": export_snapshot.get("technique", {}).get("key") if isinstance(export_snapshot, dict) else None,
+        "reparsed_missing_selected_sections": reparsed_missing,
+        "reparsed_unknown_detected_sections": reparsed_unknown,
     }
 
 
-def run_self_check() -> dict:
+def run_self_check(*, rounds: int = 2) -> dict:
     payloads = build_payloads()
+    missing_payloads = sorted(set(TOOL_DEFINITIONS) - set(payloads))
+    extra_payloads = sorted(set(payloads) - set(TOOL_DEFINITIONS))
     with tempfile.TemporaryDirectory(prefix="horosa-selfcheck-") as tmp_dir:
         tmp_root = Path(tmp_dir)
         settings = Settings.from_env().model_copy(
@@ -160,21 +80,54 @@ def run_self_check() -> dict:
         try:
             for tool_name in TOOL_DEFINITIONS:
                 payload = payloads[tool_name]
-                result = service.run_tool(tool_name, payload, save_result=True)
-                queried = service.store.query_runs(tool=tool_name, include_payload=True)
-                artifact_payload = queried[0]["artifacts"][0]["payload"] if queried else {}
+                round_results: list[dict] = []
+                for round_index in range(1, rounds + 1):
+                    result = service.run_tool(tool_name, copy.deepcopy(payload), save_result=True)
+                    round_results.append(
+                        {
+                            "round": round_index,
+                            "result_ok": result.ok,
+                            "artifact_exists": bool(result.memory_ref and Path(result.memory_ref.artifact_path).is_file()),
+                            "memory_ref": result.memory_ref.model_dump(mode="json") if result.memory_ref else None,
+                            **_build_contract_summary(tool_name, result.model_dump(mode="json")),
+                        }
+                    )
+                queried = service.store.query_runs(tool=tool_name, include_payload=True, limit=rounds + 2)
+                recent_runs = queried[:rounds]
+                artifact_checks: list[dict] = []
+                for artifact_index, run in enumerate(recent_runs, start=1):
+                    artifact_payload = run["artifacts"][0]["payload"] if run.get("artifacts") else {}
+                    artifact_checks.append(
+                        {
+                            "artifact_round": artifact_index,
+                            "run_id": run["run_id"],
+                            "artifact_path": run["artifacts"][0]["path"] if run.get("artifacts") else None,
+                            "stored_payload_ok": artifact_payload.get("ok") is True if isinstance(artifact_payload, dict) else False,
+                            **_build_contract_summary(tool_name, artifact_payload),
+                        }
+                    )
                 tool_results.append(
                     {
                         "tool": tool_name,
-                        "ok": result.ok,
+                        "ok": all(item["result_ok"] for item in round_results),
+                        "rounds_requested": rounds,
+                        "rounds": round_results,
                         "retrieved_runs": len(queried),
-                        "artifact_exists": bool(result.memory_ref and Path(result.memory_ref.artifact_path).is_file()),
-                        "stored_payload_ok": artifact_payload.get("ok") == result.ok if artifact_payload else False,
-                        "has_export_snapshot": isinstance(result.data.get("export_snapshot"), dict),
-                        "has_export_format": isinstance(result.data.get("export_format"), dict),
-                        "export_sections_count": len(result.data.get("export_format", {}).get("sections", [])) if isinstance(result.data, dict) else 0,
-                        "summary": result.summary,
-                        "memory_ref": result.memory_ref.model_dump(mode="json") if result.memory_ref else None,
+                        "artifact_exists": all(item["artifact_exists"] for item in round_results),
+                        "stored_payload_ok": len(artifact_checks) >= rounds and all(item["stored_payload_ok"] for item in artifact_checks[:rounds]),
+                        "has_export_snapshot": bool(round_results and all(item["has_export_snapshot"] for item in round_results)),
+                        "has_export_format": bool(round_results and all(item["has_export_format"] for item in round_results)),
+                        "format_source": round_results[-1]["format_source"] if round_results else None,
+                        "export_sections_count": min((item["export_sections_count"] for item in round_results), default=0),
+                        "selected_sections_count": min((item["selected_sections_count"] for item in round_results), default=0),
+                        "technique_key": round_results[-1]["technique_key"] if round_results else None,
+                        "reparsed_missing_selected_sections": sorted(
+                            {title for item in round_results for title in item.get("reparsed_missing_selected_sections", [])}
+                        ),
+                        "reparsed_unknown_detected_sections": sorted(
+                            {title for item in round_results for title in item.get("reparsed_unknown_detected_sections", [])}
+                        ),
+                        "artifact_rounds": artifact_checks,
                     }
                 )
 
@@ -192,6 +145,17 @@ def run_self_check() -> dict:
                 "memory_ref": dispatch.memory_ref.model_dump(mode="json") if dispatch.memory_ref else None,
                 "retrieved_runs": len(queried_dispatch),
                 "results_ok": {name: one.ok for name, one in dispatch.results.items()},
+                "selected_tools_covered": sorted(dispatch.selected_tools) == sorted(dispatch.result_export_contracts),
+                "result_export_contracts_ok": {
+                    name: (
+                        contract.get("has_export_snapshot") is True
+                        and contract.get("has_export_format") is True
+                        and bool(contract.get("selected_sections"))
+                        and isinstance(contract.get("technique"), dict)
+                        and bool(contract.get("technique", {}).get("key"))
+                    )
+                    for name, contract in dispatch.result_export_contracts.items()
+                },
             }
         finally:
             manager.stop_local_services()
@@ -200,25 +164,34 @@ def run_self_check() -> dict:
     missing_export = [
         item["tool"]
         for item in tool_results
-        if item["tool"] in TOOL_EXPORT_TECHNIQUE_MAP and (not item["has_export_snapshot"] or not item["has_export_format"])
+        if not _contract_is_complete(item["tool"], item)
     ]
+    dispatch_ok = bool(
+        dispatch_result
+        and dispatch_result["ok"]
+        and dispatch_result["selected_tools_covered"]
+        and all(dispatch_result["result_export_contracts_ok"].values())
+    )
     return {
         "generated_at": datetime.now(ZoneInfo("America/Los_Angeles")).isoformat(),
         "tool_count": len(tool_results),
+        "missing_payloads": missing_payloads,
+        "extra_payloads": extra_payloads,
         "tools": tool_results,
         "dispatch": dispatch_result,
         "failed_tools": failed_tools,
         "missing_export_contract_tools": missing_export,
-        "ok": not failed_tools and not missing_export and bool(dispatch_result and dispatch_result["ok"]),
+        "ok": not missing_payloads and not extra_payloads and not failed_tools and not missing_export and dispatch_ok,
     }
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run the full Horosa skill self-check.")
     parser.add_argument("--output", type=Path, help="Optional output path for the JSON report.")
+    parser.add_argument("--rounds", type=int, default=2, help="How many repeated runs to execute for each tool.")
     args = parser.parse_args()
 
-    report = run_self_check()
+    report = run_self_check(rounds=max(args.rounds, 1))
     text = json.dumps(report, ensure_ascii=False, indent=2)
     if args.output:
         args.output.write_text(text, encoding="utf-8")

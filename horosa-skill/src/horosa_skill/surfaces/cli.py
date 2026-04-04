@@ -13,10 +13,16 @@ from horosa_skill.runtime import HorosaRuntimeManager
 from horosa_skill.service import HorosaSkillService
 from horosa_skill.surfaces.mcp_server import run_mcp_server
 
-app = typer.Typer(help="Horosa Skill CLI")
-tool_app = typer.Typer(help="Atomic tool commands")
-memory_app = typer.Typer(help="Local memory commands")
-export_app = typer.Typer(help="AI export registry and parsing commands")
+app = typer.Typer(
+    help=(
+        "Horosa Skill CLI. Recommended path: install -> doctor -> serve. "
+        "Use `ask` / `dispatch` for natural-language orchestration, `tool run` for direct method calls, "
+        "and `memory show/query/answer` for local record management."
+    )
+)
+tool_app = typer.Typer(help="Direct atomic method calls such as chart, qimen, liureng, and bazi.")
+memory_app = typer.Typer(help="Inspect local records, show a single run, or attach the AI's final answer.")
+export_app = typer.Typer(help="Inspect the Xingque AI export registry and parse exported text into structured JSON.")
 app.add_typer(tool_app, name="tool")
 app.add_typer(memory_app, name="memory")
 app.add_typer(export_app, name="export")
@@ -125,11 +131,12 @@ def tool_run(
     stdin: bool = typer.Option(False, "--stdin", help="Read a JSON object from stdin."),
     input_file: Optional[Path] = typer.Option(None, "--input", help="Read a JSON object from a file."),
     save_result: bool = typer.Option(True, help="Persist the result in local memory."),
+    query_text: str | None = typer.Option(None, help="Optional original user question to store together with this run."),
 ) -> None:
     payload = _load_payload(stdin=stdin, input_file=input_file)
     service = _service()
     try:
-        result = service.run_tool(tool_name, payload, save_result=save_result)
+        result = service.run_tool(tool_name, payload, save_result=save_result, query_text=query_text)
     except ToolValidationError as exc:
         typer.echo(json.dumps({"ok": False, "code": exc.code, "message": str(exc), "details": exc.details}, ensure_ascii=False, indent=2), err=True)
         raise typer.Exit(code=2)
@@ -177,8 +184,17 @@ def dispatch(
     _print_json(result.model_dump(mode="json"))
 
 
+@app.command(help="Friendly alias of `dispatch` for natural-language use.")
+def ask(
+    stdin: bool = typer.Option(False, "--stdin", help="Read a JSON object from stdin."),
+    input_file: Optional[Path] = typer.Option(None, "--input", help="Read a JSON object from a file."),
+) -> None:
+    dispatch(stdin=stdin, input_file=input_file)
+
+
 @memory_app.command("query")
 def memory_query(
+    run_id: str | None = typer.Option(None, help="Filter by exact run id."),
     tool: str | None = typer.Option(None, help="Filter by tool name."),
     entity: str | None = typer.Option(None, help="Filter by entity name."),
     after: str | None = typer.Option(None, help="Only return runs created after this ISO timestamp."),
@@ -188,6 +204,7 @@ def memory_query(
 ) -> None:
     service = _service()
     data = service.store.query_runs(
+        run_id=run_id,
         tool=tool,
         entity=entity,
         after=after,
@@ -196,6 +213,37 @@ def memory_query(
         include_payload=include_payload,
     )
     _print_json(data)
+
+
+@memory_app.command("show")
+def memory_show(
+    run_id: str = typer.Argument(..., help="Exact run id to display."),
+    include_payload: bool = typer.Option(True, "--include-payload/--no-include-payload", help="Embed saved JSON payloads in the output."),
+) -> None:
+    service = _service()
+    data = service.store.query_runs(run_id=run_id, limit=1, include_payload=include_payload)
+    if not data:
+        typer.echo(json.dumps({"ok": False, "code": "memory.run.not_found", "message": f"Run not found: {run_id}", "details": {}}, ensure_ascii=False, indent=2), err=True)
+        raise typer.Exit(code=2)
+    _print_json(data[0])
+
+
+@memory_app.command("answer")
+def memory_answer(
+    stdin: bool = typer.Option(False, "--stdin", help="Read a JSON object from stdin."),
+    input_file: Optional[Path] = typer.Option(None, "--input", help="Read a JSON object from a file."),
+) -> None:
+    payload = _load_payload(stdin=stdin, input_file=input_file)
+    service = _service()
+    try:
+        result = service.record_ai_answer(payload)
+    except ToolValidationError as exc:
+        typer.echo(json.dumps({"ok": False, "code": exc.code, "message": str(exc), "details": exc.details}, ensure_ascii=False, indent=2), err=True)
+        raise typer.Exit(code=2)
+    except ValueError as exc:
+        typer.echo(json.dumps({"ok": False, "code": "memory.answer.unknown_run", "message": str(exc), "details": {}}, ensure_ascii=False, indent=2), err=True)
+        raise typer.Exit(code=2)
+    _print_json(result)
 
 
 if __name__ == "__main__":

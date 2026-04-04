@@ -59,16 +59,49 @@ class HorosaRuntimeManager:
         self.runtime_root = settings.runtime_root
         self.current_dir = settings.runtime_current_dir
 
-    def load_installed_manifest(self) -> dict[str, Any] | None:
+    def load_installed_manifest(self, *, strict: bool = False) -> dict[str, Any] | None:
         manifest_path = self.current_dir / "runtime-manifest.json"
         if not manifest_path.is_file():
             return None
-        return json.loads(manifest_path.read_text(encoding="utf-8"))
+        try:
+            manifest = self._normalize_manifest_data(
+                json.loads(manifest_path.read_text(encoding="utf-8")),
+                manifest_path=manifest_path,
+            )
+        except (OSError, json.JSONDecodeError, RuntimeValidationError) as exc:
+            if strict:
+                if isinstance(exc, RuntimeValidationError):
+                    raise
+                raise RuntimeValidationError(
+                    "Installed runtime manifest is invalid.",
+                    code="runtime.manifest_invalid",
+                    details={"manifest_path": str(manifest_path), "error": str(exc)},
+                ) from exc
+            return None
+        return manifest
 
-    def load_runtime_state(self) -> dict[str, Any] | None:
+    def load_runtime_state(self, *, strict: bool = False) -> dict[str, Any] | None:
         if not self.settings.runtime_state_path.is_file():
             return None
-        return json.loads(self.settings.runtime_state_path.read_text(encoding="utf-8"))
+        try:
+            payload = json.loads(self.settings.runtime_state_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            if strict:
+                raise RuntimeValidationError(
+                    "Runtime state file is invalid.",
+                    code="runtime.state_invalid",
+                    details={"path": str(self.settings.runtime_state_path), "error": str(exc)},
+                ) from exc
+            return None
+        if not isinstance(payload, dict):
+            if strict:
+                raise RuntimeValidationError(
+                    "Runtime state file must contain an object.",
+                    code="runtime.state_invalid",
+                    details={"path": str(self.settings.runtime_state_path)},
+                )
+            return None
+        return payload
 
     def install(
         self,
@@ -164,8 +197,19 @@ class HorosaRuntimeManager:
         }
 
     def doctor(self) -> dict[str, Any]:
-        manifest = self.load_installed_manifest()
-        installed = manifest is not None
+        manifest_issue: dict[str, Any] | None = None
+        runtime_state_issue: dict[str, Any] | None = None
+        installed = self.current_dir.exists()
+        try:
+            manifest = self.load_installed_manifest(strict=True)
+        except RuntimeValidationError as exc:
+            manifest = None
+            manifest_issue = {"code": exc.code, "message": str(exc), "details": exc.details}
+        try:
+            runtime_state = self.load_runtime_state(strict=True)
+        except RuntimeValidationError as exc:
+            runtime_state = None
+            runtime_state_issue = {"code": exc.code, "message": str(exc), "details": exc.details}
         required = [(label, path, kind, True) for label, path, kind in self._required_paths(manifest)]
         optional = self._optional_paths(manifest)
         files = []
@@ -188,6 +232,10 @@ class HorosaRuntimeManager:
         endpoints = self._service_status(manifest)
 
         issues = []
+        if manifest_issue:
+            issues.append(manifest_issue["code"])
+        if runtime_state_issue:
+            issues.append(runtime_state_issue["code"])
         for entry in files:
             if not entry["exists"]:
                 issues.append(f"missing:{entry['label']}")
@@ -201,7 +249,9 @@ class HorosaRuntimeManager:
             "runtime_root": str(self.runtime_root),
             "current_dir": str(self.current_dir),
             "manifest": manifest,
-            "runtime_state": self.load_runtime_state(),
+            "manifest_issue": manifest_issue,
+            "runtime_state": runtime_state,
+            "runtime_state_issue": runtime_state_issue,
             "paths": {
                 "python": str(self.current_dir / python_path),
                 "java": str(self.current_dir / java_path),
@@ -216,7 +266,7 @@ class HorosaRuntimeManager:
 
     def start_local_services(self) -> dict[str, Any]:
         self._require_runtime()
-        manifest = self.load_installed_manifest()
+        manifest = self.load_installed_manifest(strict=True)
         script = self.current_dir / self._relative_manifest_path(manifest, "services", "start_script")
         if not script.exists():
             raise RuntimeValidationError(
@@ -304,7 +354,7 @@ class HorosaRuntimeManager:
 
     def stop_local_services(self) -> dict[str, Any]:
         self._require_runtime()
-        manifest = self.load_installed_manifest()
+        manifest = self.load_installed_manifest(strict=True)
         script = self.current_dir / self._relative_manifest_path(manifest, "services", "stop_script")
         initial_status = self._service_status(manifest)
         if not any(item["reachable"] for item in initial_status):
@@ -447,6 +497,9 @@ class HorosaRuntimeManager:
     def _validate_payload_root(self, payload_root: Path) -> dict[str, Any]:
         manifest_path = payload_root / "runtime-manifest.json"
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        return self._normalize_manifest_data(manifest, manifest_path=manifest_path)
+
+    def _normalize_manifest_data(self, manifest: Any, *, manifest_path: Path) -> dict[str, Any]:
         if not isinstance(manifest, dict) or "version" not in manifest:
             raise RuntimeValidationError(
                 "Runtime manifest missing version.",

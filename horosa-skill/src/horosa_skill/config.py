@@ -24,6 +24,49 @@ def _default_runtime_root() -> Path:
     return Path.home() / ".horosa" / "runtime"
 
 
+def _env_text(name: str, default: str | None = None) -> str | None:
+    value = os.environ.get(name)
+    if value is None:
+        return default
+    stripped = value.strip()
+    return stripped if stripped else default
+
+
+def _env_path(name: str, default: Path) -> Path:
+    raw_value = _env_text(name)
+    if raw_value is None:
+        return default
+    return Path(raw_value).expanduser()
+
+
+def _env_int(name: str, default: int, *, minimum: int | None = None, maximum: int | None = None) -> int:
+    raw_value = _env_text(name)
+    if raw_value is None:
+        return default
+    try:
+        value = int(raw_value)
+    except ValueError:
+        return default
+    if minimum is not None and value < minimum:
+        return default
+    if maximum is not None and value > maximum:
+        return default
+    return value
+
+
+def _env_float(name: str, default: float, *, minimum: float | None = None) -> float:
+    raw_value = _env_text(name)
+    if raw_value is None:
+        return default
+    try:
+        value = float(raw_value)
+    except ValueError:
+        return default
+    if minimum is not None and value < minimum:
+        return default
+    return value
+
+
 class Settings(BaseModel):
     server_root: str = Field(default="http://127.0.0.1:9999")
     chart_server_root: str = Field(default="http://127.0.0.1:8899")
@@ -44,25 +87,26 @@ class Settings(BaseModel):
 
     @classmethod
     def from_env(cls) -> "Settings":
-        data_dir = _default_home_dir()
-        db_path_env = os.environ.get("HOROSA_SKILL_DB_PATH")
-        output_dir_env = os.environ.get("HOROSA_SKILL_OUTPUT_DIR")
+        data_dir = _env_path("HOROSA_SKILL_DATA_DIR", _default_home_dir())
+        db_path_env = _env_text("HOROSA_SKILL_DB_PATH")
+        output_dir_env = _env_text("HOROSA_SKILL_OUTPUT_DIR")
         return cls(
-            server_root=os.environ.get("HOROSA_SERVER_ROOT", "http://127.0.0.1:9999"),
-            chart_server_root=os.environ.get("HOROSA_CHART_SERVER_ROOT", "http://127.0.0.1:8899"),
-            db_path=Path(db_path_env) if db_path_env else data_dir / "memory.db",
-            output_dir=Path(output_dir_env) if output_dir_env else data_dir / "runs",
-            runtime_root=Path(os.environ.get("HOROSA_RUNTIME_ROOT", str(_default_runtime_root()))),
-            runtime_manifest_url=os.environ.get("HOROSA_RUNTIME_MANIFEST_URL"),
-            runtime_platform=os.environ.get("HOROSA_RUNTIME_PLATFORM"),
-            runtime_release_repo=os.environ.get("HOROSA_RUNTIME_RELEASE_REPO", DEFAULT_RELEASE_REPO),
-            local_backend_port=int(os.environ.get("HOROSA_LOCAL_BACKEND_PORT", "9999")),
-            local_chart_port=int(os.environ.get("HOROSA_LOCAL_CHART_PORT", "8899")),
-            runtime_start_timeout_seconds=float(os.environ.get("HOROSA_RUNTIME_START_TIMEOUT_SECONDS", "15")),
-            js_engine_timeout_seconds=float(os.environ.get("HOROSA_JS_ENGINE_TIMEOUT_SECONDS", "60")),
-            host=os.environ.get("HOROSA_SKILL_HOST", "127.0.0.1"),
-            port=int(os.environ.get("HOROSA_SKILL_PORT", "8765")),
-            log_level=os.environ.get("HOROSA_SKILL_LOG_LEVEL", "INFO"),
+            server_root=_env_text("HOROSA_SERVER_ROOT", "http://127.0.0.1:9999") or "http://127.0.0.1:9999",
+            chart_server_root=_env_text("HOROSA_CHART_SERVER_ROOT", "http://127.0.0.1:8899") or "http://127.0.0.1:8899",
+            data_dir=data_dir,
+            db_path=Path(db_path_env).expanduser() if db_path_env else data_dir / "memory.db",
+            output_dir=Path(output_dir_env).expanduser() if output_dir_env else data_dir / "runs",
+            runtime_root=_env_path("HOROSA_RUNTIME_ROOT", _default_runtime_root()),
+            runtime_manifest_url=_env_text("HOROSA_RUNTIME_MANIFEST_URL"),
+            runtime_platform=_env_text("HOROSA_RUNTIME_PLATFORM"),
+            runtime_release_repo=_env_text("HOROSA_RUNTIME_RELEASE_REPO", DEFAULT_RELEASE_REPO) or DEFAULT_RELEASE_REPO,
+            local_backend_port=_env_int("HOROSA_LOCAL_BACKEND_PORT", 9999, minimum=1, maximum=65535),
+            local_chart_port=_env_int("HOROSA_LOCAL_CHART_PORT", 8899, minimum=1, maximum=65535),
+            runtime_start_timeout_seconds=_env_float("HOROSA_RUNTIME_START_TIMEOUT_SECONDS", 15.0, minimum=0.1),
+            js_engine_timeout_seconds=_env_float("HOROSA_JS_ENGINE_TIMEOUT_SECONDS", 60.0, minimum=0.1),
+            host=_env_text("HOROSA_SKILL_HOST", "127.0.0.1") or "127.0.0.1",
+            port=_env_int("HOROSA_SKILL_PORT", 8765, minimum=1, maximum=65535),
+            log_level=(_env_text("HOROSA_SKILL_LOG_LEVEL", "INFO") or "INFO").upper(),
         )
 
     def ensure_dirs(self) -> None:

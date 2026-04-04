@@ -5,7 +5,10 @@ import tarfile
 from pathlib import Path
 from types import MethodType
 
+import pytest
+
 from horosa_skill.config import Settings
+from horosa_skill.errors import RuntimeValidationError
 from horosa_skill.runtime import HorosaRuntimeManager
 
 
@@ -158,3 +161,41 @@ def test_start_and_stop_runtime_updates_state(tmp_path: Path) -> None:
     assert stopped["ok"] is True
     assert stopped["already_stopped"] is False
     assert not settings.runtime_state_path.exists()
+
+
+def test_doctor_reports_invalid_manifest_and_runtime_state_without_crashing(tmp_path: Path) -> None:
+    settings = Settings(
+        runtime_root=tmp_path / "runtime-root",
+        db_path=tmp_path / "memory.db",
+        output_dir=tmp_path / "runs",
+    )
+    manager = HorosaRuntimeManager(settings)
+    settings.runtime_current_dir.mkdir(parents=True, exist_ok=True)
+    (settings.runtime_current_dir / "runtime-manifest.json").write_text("{bad json", encoding="utf-8")
+    settings.runtime_state_path.parent.mkdir(parents=True, exist_ok=True)
+    settings.runtime_state_path.write_text("[1, 2, 3]", encoding="utf-8")
+
+    report = manager.doctor()
+
+    assert report["installed"] is True
+    assert report["ok"] is False
+    assert report["manifest"] is None
+    assert report["manifest_issue"]["code"] == "runtime.manifest_invalid"
+    assert report["runtime_state"] is None
+    assert report["runtime_state_issue"]["code"] == "runtime.state_invalid"
+    assert "runtime.manifest_invalid" in report["issues"]
+    assert "runtime.state_invalid" in report["issues"]
+
+
+def test_start_runtime_raises_for_invalid_installed_manifest(tmp_path: Path) -> None:
+    settings = Settings(
+        runtime_root=tmp_path / "runtime-root",
+        db_path=tmp_path / "memory.db",
+        output_dir=tmp_path / "runs",
+    )
+    manager = HorosaRuntimeManager(settings)
+    settings.runtime_current_dir.mkdir(parents=True, exist_ok=True)
+    (settings.runtime_current_dir / "runtime-manifest.json").write_text("{bad json", encoding="utf-8")
+
+    with pytest.raises(RuntimeValidationError, match="Installed runtime manifest is invalid"):
+        manager.start_local_services()

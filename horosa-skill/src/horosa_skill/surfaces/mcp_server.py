@@ -7,7 +7,7 @@ from mcp.server.fastmcp import FastMCP
 from horosa_skill.config import Settings
 from horosa_skill.engine.registry import TOOL_DEFINITIONS
 from horosa_skill.schemas.common import DispatchEnvelope, ToolEnvelope
-from horosa_skill.schemas.tools import DispatchInput
+from horosa_skill.schemas.tools import DispatchInput, MemoryAnswerInput
 from horosa_skill.service import HorosaSkillService
 
 
@@ -28,6 +28,10 @@ def create_mcp_server(service: HorosaSkillService, settings: Settings) -> FastMC
     @mcp.tool(name="horosa_dispatch")
     def horosa_dispatch(request: DispatchInput) -> DispatchEnvelope:
         return service.dispatch(request.model_dump(exclude_none=True))
+
+    @mcp.tool(name="horosa_memory_record_answer")
+    def horosa_memory_record_answer(request: MemoryAnswerInput) -> dict[str, Any]:
+        return service.record_ai_answer(request.model_dump(exclude_none=True))
 
     for definition in TOOL_DEFINITIONS.values():
         input_model = definition.input_model
