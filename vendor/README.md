@@ -7,6 +7,8 @@ This directory exists so the local project folder can stay self-contained for of
 - `vendor/runtime-source/` is for local packaging inputs
 - it may exist on disk without being committed to GitHub
 - build scripts should still work from this folder alone
+- it is not the final install location used by end users
+- it is not a substitute for GitHub Release runtime assets
 
 That means the maintainer should not need to go back to another sibling project folder when producing runtime payloads.
 

@@ -6,6 +6,23 @@ Complete offline runtime payloads are published as GitHub Release assets, but th
 
 That local folder is allowed to exist on disk without being committed to the repository.
 
+## Runtime Placement Policy
+
+Use this rule set consistently:
+
+- `vendor/runtime-source/`
+  Maintainer-only local packaging inputs. Keep this on disk if you need to build releases from this folder alone.
+- installed runtime under `~/.horosa/runtime/current` or `%LOCALAPPDATA%/Horosa/runtime/current`
+  End-user runtime location after `horosa-skill install`.
+- GitHub Releases assets
+  The public distribution channel for complete offline runtimes.
+
+Do not treat these three locations as interchangeable.
+
+- `vendor/runtime-source/` is not the end-user install target
+- the installed runtime is not supposed to live inside the repository
+- GitHub repo history is not supposed to carry the full packaged runtime by default
+
 ## What A Release Must Contain
 
 - Python calculation layer and required dependencies

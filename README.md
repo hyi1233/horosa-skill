@@ -58,6 +58,24 @@ The important rule is:
 
 That is why `vendor/runtime-source/` exists locally and is ignored by git.
 
+## Runtime Handling Rules
+
+There are only three correct runtime locations in this project:
+
+| Scenario | Where runtime lives | Should it be committed to GitHub? |
+| --- | --- | --- |
+| Normal user installs from GitHub | `~/.horosa/runtime/current` on macOS or `%LOCALAPPDATA%/Horosa/runtime/current` on Windows | No |
+| Maintainer prepares a release locally | `vendor/runtime-source/` inside this local project folder | No, not by default |
+| Public distribution to end users | GitHub Releases runtime archives plus release manifest | Yes, as release assets, not as repo history |
+
+What this means in practice:
+
+- end users who clone the repo should run `horosa-skill install` and download a platform runtime from GitHub Releases
+- maintainers may keep large packaging inputs under `vendor/runtime-source/` locally so release builds do not depend on sibling folders
+- the repository itself should stay lightweight and should not carry full offline runtimes in normal Git history
+
+If a file is only needed to build the runtime archive, it belongs either in the local `vendor/runtime-source/` area or in a published Release asset, not in regular repository commits.
+
 ## Why This Repo Exists
 
 - Xingque already has a very rich AI export surface, but raw text is not enough for tool-calling models.

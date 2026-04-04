@@ -58,6 +58,24 @@ Horosa Skill 的目标，是把星阙里最强的 AI 导出能力和本地算法
 
 这也是 `vendor/runtime-source/` 存在的原因。
 
+## Runtime 到底怎么放
+
+这个项目里，runtime 只有三种正确位置：
+
+| 场景 | runtime 放在哪里 | 要不要提交进 GitHub 仓库历史 |
+| --- | --- | --- |
+| 普通用户从 GitHub 安装 | macOS 放 `~/.horosa/runtime/current`，Windows 放 `%LOCALAPPDATA%/Horosa/runtime/current` | 不需要 |
+| 维护者本地准备 release | 当前项目文件夹里的 `vendor/runtime-source/` | 默认不需要 |
+| 面向最终用户公开分发 | GitHub Releases 的 runtime 压缩包和 release manifest | 需要，但作为 Release 资产，不是普通 Git 提交 |
+
+实际含义就是：
+
+- 普通用户 clone 仓库后，应该运行 `horosa-skill install`，从 GitHub Releases 下载对应平台 runtime
+- 维护者为了打包方便，可以把大体积 runtime 输入留在本地 `vendor/runtime-source/`
+- 仓库本身必须保持轻量，不能把完整离线 runtime 长期塞进正常 Git 历史
+
+如果某个文件只是“打 runtime 包时要用”，那它应该待在本地 `vendor/runtime-source/` 或最终 Release 资产里，而不是默认进 GitHub 仓库提交。
+
 ## 为什么要做这个仓库
 
 - 星阙现有的 AI 导出能力很强，但原始文本对 tool-calling 模型还不够友好。
