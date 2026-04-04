@@ -20,6 +20,8 @@ from horosa_skill.schemas.tools import DispatchInput
 TOOL_EXPORT_TECHNIQUE_MAP: dict[str, str] = {
     "chart": "astrochart",
     "chart13": "astrochart_like",
+    "hellen_chart": "astrochart_like",
+    "guolao_chart": "guolao",
     "solarreturn": "solarreturn",
     "lunarreturn": "lunarreturn",
     "solararc": "solararc",
@@ -43,6 +45,8 @@ TOOL_EXPORT_TECHNIQUE_MAP: dict[str, str] = {
     "qimen": "qimen",
     "taiyi": "taiyi",
     "jinkou": "jinkou",
+    "tongshefa": "tongshefa",
+    "sanshiunited": "sanshiunited",
 }
 
 
@@ -86,6 +90,38 @@ def _generic_summary(tool_name: str, data: dict[str, Any]) -> list[str]:
             summary.append(f"贵神 {result['guiName']}，将神 {result['jiangName']}。")
         if result.get("wangElem"):
             summary.append(f"旺神五行：{result['wangElem']}。")
+        return summary
+    if tool_name == "tongshefa":
+        model = data.get("tongshefa", {})
+        summary = ["已运行本地统摄法算法。"]
+        if model.get("baseLeft", {}).get("name") and model.get("baseRight", {}).get("name"):
+            summary.append(f"本卦：左{model['baseLeft']['name']}，右{model['baseRight']['name']}。")
+        if model.get("main_relation"):
+            summary.append(f"主关系：{model['main_relation']}。")
+        return summary
+    if tool_name == "sanshiunited":
+        summary = ["已运行本地三式合一聚合算法。"]
+        qimen = data.get("qimen", {})
+        taiyi = data.get("taiyi", {})
+        if qimen.get("juText"):
+            summary.append(f"奇门局数：{qimen['juText']}。")
+        taiyi_kook = taiyi.get("kook")
+        if isinstance(taiyi_kook, dict) and taiyi_kook.get("text"):
+            summary.append(f"太乙局式：{taiyi_kook['text']}。")
+        elif taiyi_kook:
+            summary.append(f"太乙局式：{taiyi_kook}。")
+        return summary
+    if tool_name == "guolao_chart":
+        chart = data.get("chart", {})
+        summary = ["已生成七政四余盘。"]
+        if isinstance(chart.get("objects"), list):
+            summary.append(f"星曜数量：{len(chart['objects'])}。")
+        return summary
+    if tool_name == "hellen_chart":
+        chart = data.get("chart", {})
+        summary = ["已生成希腊星盘。"]
+        if isinstance(chart, dict):
+            summary.append(f"字段数：{len(chart.keys())}。")
         return summary
     lines = [f"工具 `{tool_name}` 已返回结构化结果。"]
     keys = sorted(data.keys())
@@ -154,6 +190,130 @@ def _stringify_export_body(value: Any) -> str:
                 lines.append(f"{key}: {item_text}")
         return "\n".join(lines).strip()
     return str(value).strip()
+
+
+def _section_map_from_export(export_snapshot: dict[str, Any] | None) -> dict[str, dict[str, Any]]:
+    if not isinstance(export_snapshot, dict):
+        return {}
+    sections = export_snapshot.get("sections")
+    if not isinstance(sections, list):
+        return {}
+    result: dict[str, dict[str, Any]] = {}
+    for section in sections:
+        if isinstance(section, dict) and isinstance(section.get("title"), str):
+            result[section["title"]] = section
+    return result
+
+
+def _section_body(export_snapshot: dict[str, Any] | None, title: str, default: str = "无") -> str:
+    section = _section_map_from_export(export_snapshot).get(title)
+    if not section:
+        return default
+    body = section.get("body")
+    if isinstance(body, str) and body.strip():
+        return body.strip()
+    content = section.get("content")
+    if isinstance(content, str) and content.strip():
+        content_lines = [line for line in content.splitlines() if not line.startswith("[")]
+        text = "\n".join(content_lines).strip()
+        if text:
+            return text
+    return default
+
+
+def _render_snapshot_text(sections: list[tuple[str, str]]) -> str:
+    blocks: list[str] = []
+    for title, body in sections:
+        clean_body = (body or "").strip() or "无"
+        blocks.append(f"[{title}]\n{clean_body}".strip())
+    return "\n\n".join(blocks).strip()
+
+
+def _render_qimen_palace_sections(qimen_pan: dict[str, Any]) -> list[tuple[str, str]]:
+    palace_map = {
+        8: "正北坎宫",
+        7: "东北艮宫",
+        4: "正东震宫",
+        1: "东南巽宫",
+        2: "正南离宫",
+        3: "西南坤宫",
+        6: "正西兑宫",
+        9: "西北乾宫",
+    }
+    cells = qimen_pan.get("cells")
+    if not isinstance(cells, list):
+        return [(title, "无") for title in palace_map.values()]
+
+    by_num = {
+        cell.get("palaceNum"): cell
+        for cell in cells
+        if isinstance(cell, dict) and cell.get("palaceNum") in palace_map
+    }
+    sections: list[tuple[str, str]] = []
+    for palace_num, title in palace_map.items():
+        cell = by_num.get(palace_num, {})
+        body = "\n".join(
+            [
+                f"宫数：{palace_num}",
+                f"天盘干：{cell.get('tianGan', '—')}",
+                f"地盘干：{cell.get('diGan', '—')}",
+                f"八神：{cell.get('god', '—')}",
+                f"九星：{cell.get('tianXing', '—')}",
+                f"八门：{cell.get('door', '—')}",
+            ]
+        )
+        sections.append((title, body))
+    return sections
+
+
+def _build_guolao_snapshot_text(payload: dict[str, Any], response: dict[str, Any]) -> str:
+    chart = response.get("chart", {})
+    houses = chart.get("houses") if isinstance(chart, dict) else []
+    objects = chart.get("objects") if isinstance(chart, dict) else []
+    zi_gods = (
+        response.get("nongli", {})
+        .get("bazi", {})
+        .get("guolaoGods", {})
+        .get("ziGods", {})
+        if isinstance(response.get("nongli"), dict)
+        else {}
+    )
+
+    house_lines: list[str] = []
+    for index, house in enumerate(houses or [], start=1):
+        house_id = house.get("id", f"House{index}") if isinstance(house, dict) else f"House{index}"
+        house_lines.append(f"宫位：{house_id}")
+        in_house = [obj for obj in (objects or []) if isinstance(obj, dict) and obj.get("house") == house_id]
+        if not in_house:
+            house_lines.append("星曜：无")
+        else:
+            for obj in in_house:
+                house_lines.append(f"星曜：{obj.get('id', '—')} {obj.get('su28', '')}".strip())
+        house_lines.append("")
+    gods_lines: list[str] = []
+    if isinstance(zi_gods, dict) and zi_gods:
+        for branch, info in zi_gods.items():
+            if not isinstance(info, dict):
+                continue
+            gods_lines.append(
+                f"{branch}：神煞={'、'.join(info.get('allGods', []) or []) or '无'}；太岁神={'、'.join(info.get('taisuiGods', []) or []) or '无'}"
+            )
+    return _render_snapshot_text(
+        [
+            (
+                "起盘信息",
+                "\n".join(
+                    [
+                        f"日期：{payload.get('date', '—')} {payload.get('time', '—')}",
+                        f"时区：{payload.get('zone', '—')}",
+                        f"经纬度：{payload.get('lon', '—')} {payload.get('lat', '—')}",
+                    ]
+                ),
+            ),
+            ("七政四余宫位与二十八宿星曜", "\n".join(house_lines).strip() or "无"),
+            ("神煞", "\n".join(gods_lines).strip() or "无"),
+        ]
+    )
 
 
 def _pick_section_data(title: str, *, input_normalized: dict[str, Any], response_data: dict[str, Any]) -> Any:
@@ -495,6 +655,121 @@ class HorosaSkillService:
             },
         }
 
+    def _run_tongshefa_tool(self, payload: dict[str, Any]) -> dict[str, Any]:
+        js_result = self.js_client.run("tongshefa", payload)
+        snapshot_text = js_result.get("snapshot_text")
+        return {
+            "tongshefa": js_result.get("data", {}),
+            "snapshot_text": snapshot_text,
+            "export_snapshot": self._augment_export_payload(technique="tongshefa", snapshot_text=snapshot_text),
+        }
+
+    def _run_sanshiunited_tool(self, payload: dict[str, Any]) -> dict[str, Any]:
+        shared = {
+            "date": payload["date"],
+            "time": payload["time"],
+            "zone": payload["zone"],
+            "lat": payload["lat"],
+            "lon": payload["lon"],
+            "gpsLat": payload.get("gpsLat"),
+            "gpsLon": payload.get("gpsLon"),
+            "ad": payload.get("ad", 1),
+            "after23NewDay": payload.get("after23NewDay", False),
+            "timeAlg": payload.get("timeAlg", 0),
+        }
+        qimen_result = self.run_tool(
+            "qimen",
+            {**shared, "options": payload.get("qimen_options", {})},
+            save_result=False,
+        )
+        taiyi_result = self.run_tool(
+            "taiyi",
+            {**shared, "options": payload.get("taiyi_options", {})},
+            save_result=False,
+        )
+        liureng_result = self.run_tool(
+            "liureng_gods",
+            {
+                **shared,
+                "yue": payload.get("liureng_yue"),
+                "isDiurnal": payload.get("liureng_isDiurnal"),
+            },
+            save_result=False,
+        )
+
+        qimen_export = qimen_result.data.get("export_snapshot")
+        taiyi_export = taiyi_result.data.get("export_snapshot")
+        liureng_export = liureng_result.data.get("export_snapshot")
+        snapshot_text = _render_snapshot_text(
+            [
+                ("起盘信息", _section_body(qimen_export, "起盘信息")),
+                (
+                    "概览",
+                    "\n".join(
+                        [
+                            _section_body(qimen_export, "盘型"),
+                            _section_body(qimen_export, "盘面要素"),
+                        ]
+                    ).strip(),
+                ),
+                ("太乙", _section_body(taiyi_export, "太乙盘")),
+                ("太乙十六宫", _section_body(taiyi_export, "十六宫标记")),
+                (
+                    "神煞",
+                    "\n".join(
+                        [
+                            _section_body(liureng_export, "基础神煞", ""),
+                            _section_body(liureng_export, "干煞", ""),
+                            _section_body(liureng_export, "月煞", ""),
+                            _section_body(liureng_export, "支煞", ""),
+                            _section_body(liureng_export, "岁煞", ""),
+                        ]
+                    ).strip()
+                    or "无",
+                ),
+                ("大六壬", _section_body(liureng_export, "四课")),
+                ("六壬大格", _section_body(liureng_export, "大格")),
+                ("六壬小局", _section_body(liureng_export, "小局")),
+                ("六壬参考", _section_body(liureng_export, "参考")),
+                ("六壬概览", _section_body(liureng_export, "概览")),
+                ("八宫详解", _section_body(qimen_export, "八宫详解")),
+                *_render_qimen_palace_sections(qimen_result.data.get("pan", {})),
+            ]
+        )
+        return {
+            "qimen": qimen_result.data.get("pan", {}),
+            "taiyi": taiyi_result.data.get("pan", {}),
+            "liureng": liureng_result.data.get("liureng", {}),
+            "subresults": {
+                "qimen": qimen_result.model_dump(mode="json"),
+                "taiyi": taiyi_result.model_dump(mode="json"),
+                "liureng_gods": liureng_result.model_dump(mode="json"),
+            },
+            "snapshot_text": snapshot_text,
+            "export_snapshot": self._augment_export_payload(technique="sanshiunited", snapshot_text=snapshot_text),
+        }
+
+    def _run_hellen_chart_tool(self, payload: dict[str, Any]) -> dict[str, Any]:
+        remote_payload = {**payload, "predictive": 0}
+        response = self._call_remote("/chart13", remote_payload)
+        return response
+
+    def _run_guolao_chart_tool(self, payload: dict[str, Any]) -> dict[str, Any]:
+        remote_payload = {
+            **payload,
+            "tradition": True,
+            "doubingSu28": payload.get("doubingSu28", True),
+            "predictive": False,
+            "hsys": payload.get("hsys", 0),
+            "zodiacal": payload.get("zodiacal", 0),
+        }
+        response = self._call_remote("/chart", remote_payload)
+        snapshot_text = _build_guolao_snapshot_text(remote_payload, response)
+        response = dict(response)
+        response["snapshot_text"] = snapshot_text
+        response["export_snapshot"] = self._augment_export_payload(technique="guolao", snapshot_text=snapshot_text)
+        return response
+
     def list_tools(self) -> list[dict[str, Any]]:
         return [
             {
@@ -531,6 +806,14 @@ class HorosaSkillService:
             return self._run_taiyi_tool(payload)
         if definition.name == "jinkou":
             return self._run_jinkou_tool(payload)
+        if definition.name == "tongshefa":
+            return self._run_tongshefa_tool(payload)
+        if definition.name == "sanshiunited":
+            return self._run_sanshiunited_tool(payload)
+        if definition.name == "hellen_chart":
+            return self._run_hellen_chart_tool(payload)
+        if definition.name == "guolao_chart":
+            return self._run_guolao_chart_tool(payload)
         raise ToolValidationError(
             f"Unsupported local tool: {definition.name}",
             code="tool.unsupported_local_tool",

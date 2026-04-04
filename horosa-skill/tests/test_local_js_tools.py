@@ -132,3 +132,22 @@ def test_jinkou_local_tool_runs_headless_engine(tmp_path) -> None:
     assert result.ok is True
     assert result.data["jinkou"]["guiName"] == "青龙"
     assert result.data["jinkou"]["wangElem"]
+
+
+def test_tongshefa_local_tool_runs_headless_engine(tmp_path) -> None:
+    service = make_service(tmp_path)
+
+    result = service.run_tool(
+        "tongshefa",
+        {
+            "taiyin": "巽",
+            "taiyang": "坤",
+            "shaoyang": "震",
+            "shaoyin": "震",
+        },
+        save_result=False,
+    )
+
+    assert result.ok is True
+    assert result.data["tongshefa"]["baseLeft"]["name"]
+    assert result.data["export_snapshot"] is not None

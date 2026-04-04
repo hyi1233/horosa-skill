@@ -1,11 +1,13 @@
 import { runJinkou } from './jinkou.js';
 import { runQimen } from './qimen.js';
 import { runTaiyi } from './taiyi.js';
+import { runTongSheFa } from './tongshefa.js';
 
 const TOOL_RUNNERS = {
   qimen: runQimen,
   taiyi: runTaiyi,
   jinkou: runJinkou,
+  tongshefa: runTongSheFa,
 };
 
 export function listTools() {

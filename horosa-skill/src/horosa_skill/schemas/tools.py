@@ -193,6 +193,30 @@ class JinKouInput(LiuRengGodsInput):
     liureng: dict[str, Any] | None = None
 
 
+class TongSheFaInput(FlexibleModel):
+    taiyin: str | None = "巽"
+    taiyang: str | None = "坤"
+    shaoyang: str | None = "震"
+    shaoyin: str | None = "震"
+
+
+class SanShiUnitedInput(FlexibleModel):
+    date: str
+    time: str
+    zone: str
+    lat: str
+    lon: str
+    gpsLat: float | None = None
+    gpsLon: float | None = None
+    ad: int | None = 1
+    after23NewDay: bool | None = False
+    timeAlg: int | None = 0
+    qimen_options: dict[str, Any] = Field(default_factory=dict)
+    taiyi_options: dict[str, Any] = Field(default_factory=dict)
+    liureng_yue: str | None = None
+    liureng_isDiurnal: bool | None = None
+
+
 class DispatchSubjectInput(FlexibleModel):
     name: str | None = None
     birth: BirthInput | ZiWeiBirthInput | BaZiBirthInput | LiuRengGodsInput | NongliTimeInput | None = None
