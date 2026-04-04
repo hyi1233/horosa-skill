@@ -1,60 +1,81 @@
-# Horosa Skill
+[简体中文](./README.zh-CN.md) | **English**
 
-<p align="center">
-  <strong>GitHub-first, offline-capable AI skill distribution for Xingque / Horosa.</strong>
-</p>
+<div align="center">
+  <h1>Horosa Skill</h1>
+  <p><strong>The local-first AI skill layer for Xingque / Horosa.</strong></p>
+  <p>Run structured metaphysical calculations, parse the full Xingque AI export format, and expose offline tools to Claude, Codex, Open WebUI, or OpenClaw through MCP.</p>
 
-<p align="center">
-  Turn the full Xingque AI export protocol, structured metaphysical tooling, and local runtime packaging flow into a repository that other AI systems can actually use.
-</p>
+  <p>
+    <a href="https://github.com/Horace-Maxwell/horosa-skill">
+      <img src="https://img.shields.io/badge/Browse-Repository-0f172a?style=for-the-badge&logo=github" alt="Browse Repository" />
+    </a>
+    <a href="https://github.com/Horace-Maxwell/horosa-skill/releases">
+      <img src="https://img.shields.io/badge/Browse-Releases-1d4ed8?style=for-the-badge&logo=github" alt="Browse Releases" />
+    </a>
+    <a href="./README.zh-CN.md">
+      <img src="https://img.shields.io/badge/Read%20in-Chinese-0f766e?style=for-the-badge" alt="Read in Chinese" />
+    </a>
+  </p>
 
-<p align="center">
-  <a href="https://github.com/Horace-Maxwell/horosa-skill/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/Horace-Maxwell/horosa-skill?style=for-the-badge"></a>
-  <a href="https://github.com/Horace-Maxwell/horosa-skill/releases"><img alt="GitHub release" src="https://img.shields.io/github/v/release/Horace-Maxwell/horosa-skill?style=for-the-badge"></a>
-  <img alt="Python 3.12+" src="https://img.shields.io/badge/python-3.12%2B-111111?style=for-the-badge&logo=python&logoColor=white">
-  <img alt="MCP" src="https://img.shields.io/badge/MCP-ready-111111?style=for-the-badge">
-  <img alt="Offline runtime" src="https://img.shields.io/badge/offline-runtime-111111?style=for-the-badge">
-  <img alt="macOS" src="https://img.shields.io/badge/macOS-supported-111111?style=for-the-badge&logo=apple&logoColor=white">
-  <img alt="Windows scaffold" src="https://img.shields.io/badge/Windows-scaffolded-111111?style=for-the-badge&logo=windows&logoColor=white">
-</p>
+  <p>
+    <img src="https://img.shields.io/github/stars/Horace-Maxwell/horosa-skill?style=for-the-badge" alt="GitHub stars" />
+    <img src="https://img.shields.io/github/v/release/Horace-Maxwell/horosa-skill?display_name=tag&style=for-the-badge" alt="Release" />
+    <img src="https://img.shields.io/badge/platform-macOS%20%7C%20Windows-0f766e?style=for-the-badge" alt="Platforms" />
+    <img src="https://img.shields.io/badge/runtime-local%20first-111827?style=for-the-badge" alt="Local first runtime" />
+    <img src="https://img.shields.io/badge/MCP-ready-111827?style=for-the-badge" alt="MCP ready" />
+    <img src="https://img.shields.io/badge/python-3.12%2B-111827?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.12+" />
+  </p>
+</div>
 
-## What This Repo Is
+![Horosa Skill hero](./docs/media/hero-banner.svg)
 
-`horosa-skill` is the GitHub distribution layer for a local-first Horosa runtime and AI skill surface.
+## What Horosa Skill Is
 
-It is designed so someone can:
+Horosa Skill turns Xingque's richest export surface and offline calculation stack into something modern AI tools can actually call.
 
-1. clone the repository
-2. install or unpack a local runtime
-3. connect Claude, Codex, Open WebUI, or OpenClaw through MCP
-4. call Horosa/Xingque methods with structured JSON input and output
-5. persist every run locally for later retrieval
+- Parse the full Xingque AI export format into stable JSON
+- Expose structured tools through MCP and a JSON-first CLI
+- Persist results to local SQLite and JSON artifacts
+- Package offline runtime assets from one local project folder
+- Keep the public GitHub repo clean without losing local self-containment
 
-This repository is not trying to be a copy of the entire desktop app source tree. It is trying to be the cleanest possible public-facing delivery layer for:
+If the goal is "install once, let any serious AI call real Xingque methods locally, and do not depend on an external service," this repo is built for that.
 
-- the Xingque AI export protocol
-- the local MCP and CLI surfaces
-- the offline runtime packaging workflow
-- the vendored runtime source subset needed for release builds
+## What Lives Where
+
+This project intentionally separates two concerns:
+
+| Area | Purpose |
+| --- | --- |
+| GitHub repository | Public code, docs, CLI, MCP surface, examples, and release scripts |
+| Local project folder | Everything above, plus any large runtime sources needed for offline packaging |
+
+The important rule is:
+
+- required runtime inputs can live inside this local folder
+- they do not need to be committed to GitHub history
+- packaging scripts must be able to build from this folder alone, without hunting through sibling directories
+
+That is why `vendor/runtime-source/` exists locally and is ignored by git.
 
 ## Why This Repo Exists
 
-- Most AI tools can read JSON and call tools, but cannot understand Xingque's richest export format out of the box.
-- Most users should not need your private dev tree or local folder layout just to publish or run Horosa offline.
-- A GitHub repo intended for other AIs needs a stable entrypoint, stable schema, stable install story, and stable local storage model.
+- Xingque already has a very rich AI export surface, but raw text is not enough for tool-calling models.
+- Most users should not need your private dev tree just to run Horosa offline.
+- A serious AI-facing repository needs a stable schema, install path, runtime story, and client integration story.
 
-This repo is built around exactly that.
+Horosa Skill is the delivery layer for exactly that.
 
 ## Core Capabilities
 
-- `horosa_dispatch` for natural-language request routing
-- atomic tools for charting, predictive, Chinese metaphysical, and export-related calls
-- machine-readable Xingque AI export registry
-- parser from Xingque AI export text snapshots to structured JSON
-- local SQLite + JSON artifact persistence
-- MCP server for AI clients
-- JSON-first CLI for direct testing
-- vendored runtime source layout for offline packaging
+| Area | What it does |
+| --- | --- |
+| Export protocol | Publishes the Xingque AI export registry as machine-readable schema |
+| Export parsing | Converts Xingque AI export text into structured JSON sections |
+| Tool surface | Exposes `horosa_dispatch` plus atomic tools for charting and metaphysical methods |
+| AI integration | Supports MCP-based clients such as Claude, Codex, Open WebUI, and OpenClaw |
+| Local storage | Stores runs in SQLite and writes JSON artifacts for later retrieval |
+| Offline packaging | Builds runtime payloads from local vendored sources inside this folder |
 
 ## Quick Start
 
@@ -105,13 +126,6 @@ uv run horosa-skill doctor
 
 ## CLI Examples
 
-List tools:
-
-```bash
-cd horosa-skill
-uv run horosa-skill tool list
-```
-
 Export the full Xingque AI export registry:
 
 ```bash
@@ -129,7 +143,7 @@ echo '{
 }' | uv run horosa-skill export parse --stdin
 ```
 
-Run a tool directly:
+Run an atomic tool directly:
 
 ```bash
 echo '{"date":"1990-01-01","time":"12:00","zone":"8","lat":"31n14","lon":"121e28"}' \
@@ -148,25 +162,26 @@ echo '{
 
 ## Repository Layout
 
-- [`horosa-skill/`](./horosa-skill)
-  Python package, CLI, MCP server, tests, client examples, and release scripts.
-- [`docs/`](./docs)
-  Runtime manifest spec, release docs, and repo layout docs.
-- [`vendor/`](./vendor)
-  Local maintainer area for runtime sources kept on disk but not required in Git history.
+| Path | Role |
+| --- | --- |
+| [`horosa-skill/`](./horosa-skill) | Python package, CLI, MCP server, tests, examples, and release scripts |
+| [`docs/`](./docs) | Runtime specs, release notes, and maintainership docs |
+| [`vendor/`](./vendor) | Local runtime source area for offline packaging |
+
+See [Repo Layout](./docs/REPO_LAYOUT.md) for the maintainer view.
 
 ## Offline Runtime Strategy
 
-This repo uses a two-layer release model:
+This repo uses a two-layer model:
 
-- the Git repository stays reviewable and reasonably organized
-- full offline runtime assets are produced from local runtime sources and shipped as release archives
+- the public repository stays reviewable and uploadable
+- full offline runtime payloads are built from local runtime sources inside this folder
 
-Current local runtime inputs can include:
+Typical local runtime inputs can include:
 
 - Horosa Python calculation layer
-- flatlib and Swiss Ephemeris files
-- Xingque export-related frontend bundle assets
+- flatlib and Swiss Ephemeris data
+- Xingque export-related frontend assets
 - embedded macOS Python runtime
 - embedded macOS Java runtime
 - bundled `astrostudyboot.jar`
@@ -197,13 +212,12 @@ Implemented now:
 
 - structured export registry
 - structured export parser
-- CLI surface
-- MCP surface
+- CLI and MCP surfaces
 - local memory store
-- runtime install and doctor commands
-- runtime start/stop orchestration
-- vendored macOS runtime packaging inputs
-- Windows runtime scaffold
+- runtime install, doctor, and stop commands
+- runtime start or stop orchestration
+- local vendored runtime packaging for macOS
+- Windows runtime scaffold and release helpers
 
 Still in progress:
 
@@ -213,20 +227,13 @@ Still in progress:
 
 ## Design References
 
-This repository direction was informed by how strong high-star projects present themselves:
+This repo direction is informed by strong open-source product repositories and by your own product-style repo structure:
 
 - [supabase/supabase](https://github.com/supabase/supabase)
 - [shadcn-ui/ui](https://github.com/shadcn-ui/ui)
 - [n8n-io/n8n](https://github.com/n8n-io/n8n)
 - [open-webui/open-webui](https://github.com/open-webui/open-webui)
-
-The main takeaways applied here are:
-
-- strong value proposition at the top
-- clean first-run path
-- visible integration story
-- dedicated contributing and security files
-- clear separation between product surface and release internals
+- your `portpilot` repo pattern for hero layout, bilingual README flow, and product-first framing
 
 ## Contributing
 

@@ -1,8 +1,10 @@
 # Offline Runtime Releases
 
-This lightweight repository does not commit the full Horosa runtime. Instead, complete offline runtime payloads are published as GitHub Release assets.
+This repository is meant to stay lightweight in Git history while still supporting fully local runtime packaging.
 
-The source inputs needed to build those payloads are expected to live locally inside [`../vendor/runtime-source`](../vendor). That local folder may be excluded from Git history.
+Complete offline runtime payloads are published as GitHub Release assets, but the source inputs needed to build those payloads should live locally inside [`../vendor/runtime-source`](../vendor).
+
+That local folder is allowed to exist on disk without being committed to the repository.
 
 ## What A Release Must Contain
 

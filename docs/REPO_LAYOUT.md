@@ -1,15 +1,22 @@
 # Repo Layout
 
-This repository is intentionally split into a small number of uploadable areas:
+This project is intentionally split so the repository can stay clean while the local folder can still stay self-contained.
+
+## Public Repository Surface
 
 - `README.md`
-  The GitHub landing page and first-run instructions.
+  The main GitHub landing page and first-run instructions.
+- `README.zh-CN.md`
+  Chinese landing page for the same product surface.
 - `docs/`
-  Maintainer-facing documentation, release notes, and example manifests.
-- `vendor/`
-  Local runtime source area used for release packaging; may remain outside Git history when payloads are too large for normal GitHub storage.
+  Maintainer-facing documentation, release notes, specs, and example manifests.
 - `horosa-skill/`
   The actual Python package, CLI, MCP server, tests, and client examples.
+
+## Local-Only Packaging Surface
+
+- `vendor/`
+  Local runtime source area used for release packaging. This folder may exist on disk even when large contents inside it are excluded from Git history.
 
 ## horosa-skill/
 
